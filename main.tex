@@ -1,0 +1,143 @@
+
+\newif\ifuplatex
+%\uplatextrue
+\ifuplatex
+\documentclass[bachelor,dvipdfmx]{style/uplatex_thesis} % 卒業論文
+%\documentclass[master,dvipdfmx]{style/uplatex_thesis} % 修士論文
+%\documentclass[doctor,dvipdfmx]{style/uplatex_thesis} % 博士論文
+\else
+\documentclass[bachelor]{style/thesis} % 卒業論文
+%\documentclass[master,hyperref]{style/thesis} % 修士論文
+%\documentclass[doctor]{style/thesis} % 博士論文
+\fi
+% フォントのエンコード
+\usepackage[T2A,T1]{fontenc}
+
+% 数式のシンボルフォント。アメリカ数学会の設定
+\usepackage{amsmath,amssymb}
+
+% 色
+\usepackage{color}
+\usepackage{bm}
+
+% 数詞
+\usepackage[super]{nth}
+
+% 囲み枠
+\usepackage{ascmac}
+\usepackage{fancybox}
+
+% float 環境関連（図表）
+\usepackage{float}
+\usepackage{longtable,booktabs}
+\usepackage{tabularx}
+
+% URL の記述
+\usepackage{url}
+
+% OTF フォント（和文フォント）
+\ifuplatex
+\else
+\usepackage{luacode}
+\usepackage{luatexja-otf}
+\usepackage[haranoaji,deluxe,jis2004]{luatexja-preset}
+\fi
+% \usepackage[ipa,jis2004]{luatexja-preset} % IPA フォント
+%\usepackage[ipaex,jis2004]{luatexja-preset} % IPAex フォント
+%\usepackage[sourcehan,deluxe,jis2004]{luatexja-preset} % 源ノ角／源ノ明朝フォント
+%\usepackage[hiragino-pron,deluxe,jis2004]{luatexja-preset} % macOS ならこっちでも可（ヒラギノフォント）
+
+% フォント設定（数式）
+\ifuplatex
+\else
+\usepackage[math-style=ISO,bold-style=ISO]{unicode-math}
+\fi
+% フォント設定（欧文）
+% main ... 本文フォント。ローマン体。\textrm で使用
+% sans ... ヒゲのないフォント。サンセリフ体（和文で言うゴシック体）。\textsf で使用
+% mono ... 固定幅フォント。タイプライタ体。ソースコードのリストに使う。\texttt で使用
+% math ... 数式フォント
+%
+%\setmathfont{TeX Gyre Termes Math}
+%\setmathfont{TeX Gyre Pagella Math}
+%\setmainfont[Ligatures=TeX, Scale=0.95]{TeX Gyre Termes}
+%\setmainfont[Ligatures=TeX, Scale=0.95]{TeX Gyre Pagella}
+%\setsansfont[Ligatures=TeX, Scale=0.95]{TeX Gyre Heros}
+%\setsansfont[Ligatures=TeX, Scale=0.9]{TeX Gyre Adventor}
+%\setmonofont[Ligatures=TeX, Scale=1]{TeX Gyre Cursor}
+
+% TeX Gyre フォントと OTF フォントの共存
+%\renewcommand{\bfdefault}{bx}
+%\renewcommand{\headfont}{\gtfamily\sffamily\bfseries}
+
+\ifuplatex
+\else
+\usepackage{upquote}
+% \usepackage[utf8x]{luainputenc} % 入力の文字エンコード
+\fi
+
+% 欧文組版のマイクロタイポグラフィー（細かな読み易さの調整）を有効化
+\usepackage{microtype}
+
+% 参考文献に BibLaTeX を使う
+\usepackage[backend=bibtex, style=numeric, sorting=none]{biblatex}
+\addbibresource{citation/reference.bib}
+
+% PDF にハイパーリンク作成
+\ifuplatex
+\usepackage[dvipdfmx]{hyperref}
+\else
+\usepackage{hyperref}
+\fi
+% PDF のメタデータ設定
+\hypersetup{%
+            pdfauthor={杉田　光希},
+            pdftitle={ドキュメント DB と連動する仮想マシンライブ移送},
+            pdfsubject={2025年度 卒業論文},
+            %pdfkeywords={クラウド; ライブラリ OS; 仮想化; 計測; Cloud; Library OS; virtualization; measurement; Unikernel},
+}
+
+\input{00_title}
+
+\pagestyle{plain}
+% 文書開始
+\begin{document}
+% 日本語の概要はここに記述
+\begin{jabstract}
+\input{00_jabstract}
+\end{jabstract}
+
+% 英語の概要はここに記述
+\begin{eabstract}
+\input{00_eabstract}
+\end{eabstract}
+
+\maketitle
+
+% 本文
+\include{01_introduction}
+\include{02_background}
+\include{03_relatedworks}
+\include{04_analysis}
+\include{05_evaluation}
+\include{06_proposal}
+\include{07_conclusion}
+
+% ページ番号を小文字アルファベットに
+\pagenumbering{alph}
+
+% 謝辞
+\include{99_thanks}
+
+% 参考文献
+%\nocite{*}
+% BibLaTeX の場合
+\printbibliography[heading=bibintoc,title=参考文献]
+% BibTeX の場合
+%\bibliographystyle{junsrt}
+%\bibliography{citation/reference}
+
+% 付録
+\include{99_appendix}
+
+\end{document}

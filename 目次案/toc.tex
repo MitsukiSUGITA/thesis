@@ -1,0 +1,219 @@
+\newif\ifuplatex
+%\uplatextrue
+\ifuplatex
+\documentclass[10.5ptj,a4j,uplatex,dvipdfmx]{jsarticle}
+\else
+\documentclass[10.5ptj,a4j]{ltjsarticle}
+\fi
+%
+\usepackage{amsmath,amssymb}
+\usepackage{bm}
+\usepackage{graphicx}
+\usepackage{ascmac}
+\usepackage{url}
+\usepackage{listings}
+
+\ifuplatex
+\else
+\usepackage[no-math]{fontspec}
+\usepackage{unicode-math}
+\unimathsetup{math-style=ISO,bold-style=ISO}
+
+\setmathfont{TeX Gyre Pagella Math}
+%\setmainfont[Ligatures=TeX, Scale=0.95]{TeX Gyre Termes}
+\setmainfont[Ligatures=TeX, Scale=0.95]{TeX Gyre Pagella}
+\setsansfont[Ligatures=TeX, Scale=0.95]{TeX Gyre Heros}
+\setmonofont[Ligatures=TeX, Scale=1]{TeX Gyre Cursor}
+\fi
+
+\renewcommand{\bfdefault}{bx}
+\renewcommand{\headfont}{\gtfamily\sffamily\bfseries}
+
+\ifuplatex
+\else
+\usepackage{luacode}
+\usepackage{luatexja-otf}
+
+%\usepackage[morisawa-pr6n,deluxe,jis2004]{luatexja-preset}
+\usepackage[hiragino-pron,deluxe,jis2004]{luatexja-preset}
+
+\IfFileExists{upquote.sty}{\usepackage{upquote}}{}
+\usepackage[utf8x]{luainputenc}
+\fi
+
+\def\OSv{OS\raise.5ex\hbox{v}}
+
+%
+\renewcommand{\lstlistingname}{ソースコード}
+\lstset{%
+  basicstyle=\ttfamily\footnotesize,
+  commentstyle=\textit,
+  classoffset=1,
+  keywordstyle=\bfseries,
+  frame=tRBl,
+  framesep=5pt,
+  showstringspaces=false,
+  numbers=left,
+  stepnumber=1,
+  numberstyle=\footnotesize,
+  tabsize=4
+}
+%
+% paper setting
+%\usepackage[
+%    headsep=4truemm,
+%    top=19truemm,
+%    left=22.2truemm,
+%    right=19truemm,
+%    bottom=23truemm,
+%    footskip=5.5truemm,
+%    textwidth=45\zw,
+%    textheight=40\Cvs,
+%]{geometry}
+
+\providecommand{\tightlist}{%
+  \setlength{\itemsep}{0pt}\setlength{\parskip}{0pt}}
+
+\ifuplatex
+\usepackage[
+    headheight=5truemm,
+    headsep=3truemm,
+    textheight=230mm,
+]{geometry}
+\else
+\usepackage[
+    topmargin=-12truemm,
+    headheight=5truemm,
+    headsep=3truemm,
+    textheight=230mm,
+]{geometry}
+\fi
+
+\title{目次案}
+\author{金津 穂}
+\date{\today}
+
+\begin{document}
+\maketitle
+%
+% 目次の表示
+\tableofcontents
+
+\newpage
+\section{はじめに}
+\begin{itemize}\tightlist{}
+
+\item クラウドというワードが登場して 10 年経ち，多くのシステムがオンプレミス環境からクラウド環境に移行している
+\begin{itemize}\tightlist{}
+\item クラウド環境，とくに IaaS と呼ばれるものは，仮想化技術を利用してユーザーに計算資源を貸し与える
+\item IaaS では，CPU の使用率やネットワークの使用帯域といったものに応じた従量課金モデルが採用されている
+\item また，クラウド環境の大きな特徴はオンデマンド性であり，必要に応じインスタンスを増減し，サービスの \emph{Elasticity} が実現できる
+\end{itemize}
+
+\item クラウド環境でのインスタンスの起動の速度がサービスのクオリティに係わるようになってきている
+\begin{itemize}\tightlist{}
+\item IaaS にしろ PaaS にしろ，普段使わないインスタンスは起動せず，アクセスの増加に応じて起動・応答するほうがコストが抑えられる
+\begin{itemize}\tightlist{}
+\item 普段から不要なインスタンスを起動しないことで，クラウド事業者は余分の資源を更なるユーザーに貸し与えることができ，クラウド環境利用者も不必要な課金が抑えられる
+\end{itemize}
+\item インスタンスの起動速度が遅い場合，サービスの応答が遅くなり，結果としてエンドユーザーへのサービスの提供クオリティが下がることとなる
+\end{itemize}
+
+\item 既存の汎用 OS の限界
+\begin{itemize}\tightlist{}
+\item 特定の Web サービスを起動するだけであるのなら既存の OS にはクラウドで不必要な機構が多い。また，仮想化された環境をで動作させるため，特定のターゲットに特化したシステムソフトウェアでも必要十分となる
+\end{itemize}
+
+\item 軽量仮想化
+\begin{itemize}\tightlist{}
+\item 既存の軽量仮想化手法として Unikernel が上げられる
+\begin{itemize}\tightlist{}
+\item これは Library OS の一種で，VMM 上でサービスを動作させる最低限の機構をカーネル，ライブラリとし，サービスとリンクさせて一体化したコンテナにし，それをクラウド環境にデプロイすることが可能な仕組みである
+\end{itemize}
+\item Unikernel には \OSv{} や Rumprun といった，既存の汎用 OS の API 層を持つことによって既存のアプリケーションをソースコードレベルで互換することに成功したものが存在する。
+\item しかし，Unikernel の構造上，シングルプロセスでしか動作せず，互換性が不十分な上にデータセンタのような複数の物理ノードを持つ環境で計算資源を活かせない
+\end{itemize}
+
+\item 本研究では，はじめに汎用 OS と Unikernel の起動パフォーマンスとその傾向を明かにし，また，複数の物理ノードで Unikernel が効力を発揮する新しいシステムの設計を提案する
+ 
+\end{itemize}
+
+\section{背景}
+
+\subsection{クラウド環境}
+\begin{itemize}\tightlist{}
+\item クラウド環境の登場
+\item IaaS, PaaS, SaaS
+\item 利用例
+\end{itemize}
+
+\subsection{仮想化環境}
+\begin{itemize}\tightlist{}
+\item ハイパーバイザの種類
+\item QEMU/\texttt{kvm}
+\item Xen
+\item ライブラリ OS
+\end{itemize}
+
+\subsection{Unikernel}
+\begin{itemize}\tightlist{}
+\item Mirage
+\item \OSv{}
+\item Rumprun
+\end{itemize}
+
+\section{関連研究}
+\begin{itemize}\tightlist{}
+\item Dune
+\item VM fork
+\item VM substrate
+\item LightVM
+\item nom
+\item Unikernel Monitor
+\item Jitsu
+\end{itemize}
+
+\section{提案}
+\subsection{Unikernel fork}
+\begin{itemize}\tightlist{}
+\item Unikernel と VMM で協調し fork/exec をリモートに対して行なうアーキテクチャ，Unikernel fork の提案
+\end{itemize}
+
+\subsection{Unikernel fork の協調手法}
+\begin{itemize}\tightlist{}
+\item 複数のノード間での Xen 同士の情報共有手法（分散 kvs）
+\end{itemize}
+
+\subsection{Unikernel fork の高速化}
+\begin{itemize}\tightlist{}
+\item アプリケーションイメージのテンプレート化，予め初期化シーケンスを終了させる
+\end{itemize}
+
+\section{起動パフォーマンス}
+\subsection{起動パフォーマンスの定義}
+\subsection{起動パフォーマンスの測定手法}
+\begin{itemize}\tightlist{}
+\item 複数のインスタンスを起動し，標準出力を監視することによって起動の終了を確認
+\item 計測用途ソースコード
+\end{itemize}
+
+\section{予備実験（起動パフォーマンス）}
+\subsection{実験環境}
+\subsection{目的}
+\subsection{方法}
+\subsection{kvm}
+\subsubsection{Rumprun}
+\subsubsection{Linux}
+\subsection{xen}
+\subsubsection{Mini-OS}
+\subsubsection{Rumprun}
+\subsubsection{Linux}
+\subsection{kvm v.s.\ xen}
+\subsection{結果}
+
+\section{おわりに}
+
+
+%
+%
+\end{document}

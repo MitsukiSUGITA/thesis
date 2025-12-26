@@ -1,0 +1,29 @@
+name: Makefile CI
+
+on:
+  push:
+    branches: [ "master" ]
+  pull_request:
+    branches: [ "master" ]
+
+jobs:
+  build:
+
+    runs-on: ubuntu-latest
+
+    steps:
+    - uses: actions/checkout@v3
+    - name: LuaLaTeX Build
+      uses: xu-cheng/latex-action@3.1.0
+      with:
+        root_file: main.tex
+        latexmk_use_lualatex: true
+    # run: |
+    #   make clean
+    #   make
+    #   mv thesis.pdf thesis_lualatex.pdf
+    # - name: upLaTeX Build
+    #   run: |
+    #     make clean
+    #     make uplatex
+    #     mv thesis.pdf thesis_uplatex.pdf

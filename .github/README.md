@@ -1,0 +1,70 @@
+# つかいかた
+
+1. TeXLive の最新版をフルインストールします（TeXLive 2017 での動作を確認）
+2. main.tex のクラスオプションを自分の執筆するものに合わせます
+    - もし卒業論文なら，main.tex の eabstract 環境をコメントアウトすること
+3. 自分の顔写真はこのディレクトリに face.pdf として配置すること
+4. `make` コマンドか `latexmk -lualatex main` コマンドでタイプセットできます
+    - make コマンドの場合余計な中間ファイルは毎回全て消えるので見通しが良くなります。また，出力ファイル名は thesis.pdf です（詳しくは Makefile を読んでください）
+
+# クラスオプション
+
+: bachelor
+表紙や概要を卒業論文向けに出力します
+
+: master
+表紙や概要を修士論文向けに出力します
+
+: doctor
+表紙や概要を博士論文向けに出力します
+
+: hyperref
+出力する PDF にハイパーリンクを付けます。このオプションを指定する場合はプリアンブルで `\usepackage{hyperref}` する必要があります。詳しくは `main.tex` を参考にして下さい。
+また，`hyperref` パッケージは他のパッケージを読み込んだ後に最後に読み込む必要があります。
+
+: notoc
+目次を出力しない
+
+: nolof
+図目次を出力しない
+
+: nolot
+表目次を出力しない
+
+: nolol
+コード目次を出力しない
+
+# Tips
+
+- `kpsewhich fmutil.cnf` というコマンド結果に出てくるファイルの中の，luajitlatex の行の先頭の `#!` を消してコメントアウト
+    - こうすると `luajittex --fmt=luajitlatex.fmt` というコマンドを使うことで，LuaLaTeX の実行が JIT コンパイラ使われるようになって若干高速化します
+- このディレクトリは既に `git init` してある Git repository なので，何かコミットしたりなんだりで差分管理していくと幸せになれると思います
+
+## upLaTeX
+- 日本語に特化した LaTeX および PDF 生成ツールである upLaTeX + dvipdfmx が使えます
+    - LuaLaTeX よりも高速かつ軽量であり，生成される PDF のサイズが小さくなることが多いというメリットがあります
+- `make uplatex` コマンドにより，upLaTeX を使ったビルドができます
+    - 論文本体と目次案の両方に対応しています
+- 何かエラーが出たら和田まで
+
+<!-- # 注意
+
+**（そもそも LuaLaTeX を使える場合はこの注意の節は一切無視して構いません）**
+**どうしても LuaLaTeX を使いたくない人だけ以下を読んでください**
+
+- このクラスファイル（style/thesis.cls）は LuaLaTeX 前提に作られています。
+- もし upLaTeX で使用したい場合は，以下の手順で可能になる（はずです）
+
+1. style/thesis.cls の中の \zw と \zh を全て zw と zh に置換する
+2. style/thesis.cls の \LoadClass の行について，ltjsbook を jsbook にし，onecolumn の隣に uplatex というオプションを追加する
+3. style/thesis.cls の中の academicyear という文言を含むコマンドは Lua のコードを実行するので，普通に自分に合った年度に直す
+    - % 年度の計算，というコメントがある 3 つのコマンドをコメントアウトすれば良い。
+    - \entranceacademicyear は入学年度，\thisacademicyear は今年度を計算します
+4. style/thesis.cls の最後の \hypersetup にある pdflatex を dvipdfmx に置換する
+
+クラスファイルの改変は以上で大丈夫だと思いますが他にもいくつか注意点があります。
+
+- main.tex の lua なんちゃらから始まるパッケージは全て upLaTeX では使えない
+- もしかしたら unicode-math パッケージも使えないもしれません
+
+他にエラーが出た場合は適宜対応してください。 -->
