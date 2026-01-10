@@ -113,10 +113,12 @@
 
     {\Large（\entranceacademicyear{}年度入学，\@studentnumber）}
 
-    \IfFileExists{face.pdf}{%
+    %\IfFileExists{face.pdf}{%
+    \IfFileExists{figure/face.png}{%
     \begin{figure}[h]
         \centering
-        \includegraphics[height=60mm]{face.pdf}
+        %\includegraphics[height=60mm]{face.pdf}
+        \includegraphics[height=60mm]{figure/face.png}
     \end{figure}
     }{%
     \IfFileExists{tikzpeople.sty}{%
@@ -171,8 +173,7 @@
     \vspace*{-6\zh}
     \begin{center}
         \if@bachelor
-        %{東京農工大学 工学部 \@institute　\thisacademicyear{}年度　\@type{}論文　要旨}\\
-        {東京農工大学 工学部 \@institute　2025年度　\@type{}論文中間発表　概要}\\
+        {東京農工大学 工学部 \@institute　\thisacademicyear{}年度　\@type{}論文　要旨}\\
         \else
         {東京農工大学 大学院 工学府 \@institute　\thisacademicyear{}年度　\@type{}論文　要旨}\\
         \fi

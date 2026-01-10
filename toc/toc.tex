@@ -1,0 +1,386 @@
+\newif\ifuplatex
+%\uplatextrue
+\ifuplatex
+\documentclass[10.5ptj,a4j,uplatex,dvipdfmx]{jsarticle}
+\else
+\documentclass[10.5ptj,a4j]{ltjsarticle}
+\fi
+%
+\usepackage{amsmath,amssymb}
+\usepackage{bm}
+\usepackage{graphicx}
+\usepackage{ascmac}
+\usepackage{url}
+\usepackage{listings}
+
+\ifuplatex
+\else
+\usepackage[no-math]{fontspec}
+\usepackage{unicode-math}
+\unimathsetup{math-style=ISO,bold-style=ISO}
+
+\setmathfont{TeX Gyre Pagella Math}
+%\setmainfont[Ligatures=TeX, Scale=0.95]{TeX Gyre Termes}
+\setmainfont[Ligatures=TeX, Scale=0.95]{TeX Gyre Pagella}
+\setsansfont[Ligatures=TeX, Scale=0.95]{TeX Gyre Heros}
+\setmonofont[Ligatures=TeX, Scale=1]{TeX Gyre Cursor}
+\fi
+
+\renewcommand{\bfdefault}{bx}
+\renewcommand{\headfont}{\gtfamily\sffamily\bfseries}
+
+\ifuplatex
+\else
+\usepackage{luacode}
+\usepackage{luatexja-otf}
+
+\usepackage[haranoaji,deluxe,jis2004]{luatexja-preset}
+%\usepackage[yu-win10,deluxe,jis2004]{luatexja-preset}
+%\usepackage[morisawa-pr6n,deluxe,jis2004]{luatexja-preset} % Windows用
+%\usepackage[hiragino-pron,deluxe,jis2004]{luatexja-preset} % Mac用
+
+\IfFileExists{upquote.sty}{\usepackage{upquote}}{}
+%\usepackage[utf8x]{luainputenc}
+\fi
+
+\def\OSv{OS\raise.5ex\hbox{v}}
+
+%
+\renewcommand{\lstlistingname}{ソースコード}
+\lstset{%
+  basicstyle=\ttfamily\footnotesize,
+  commentstyle=\textit,
+  classoffset=1,
+  keywordstyle=\bfseries,
+  frame=tRBl,
+  framesep=5pt,
+  showstringspaces=false,
+  numbers=left,
+  stepnumber=1,
+  numberstyle=\footnotesize,
+  tabsize=4
+}
+%
+% paper setting
+%\usepackage[
+%    headsep=4truemm,
+%    top=19truemm,
+%    left=22.2truemm,
+%    right=19truemm,
+%    bottom=23truemm,
+%    footskip=5.5truemm,
+%    textwidth=45\zw,
+%    textheight=40\Cvs,
+%]{geometry}
+
+\providecommand{\tightlist}{%
+  \setlength{\itemsep}{0pt}\setlength{\parskip}{0pt}}
+
+\ifuplatex
+\usepackage[
+    headheight=5truemm,
+    headsep=3truemm,
+    textheight=230mm,
+]{geometry}
+\else
+\usepackage[
+    top=20truemm,
+    %topmargin=-12truemm,
+    headheight=5truemm,
+    headsep=3truemm,
+    textheight=230mm,
+]{geometry}
+\fi
+
+\title{目次案\par ドキュメント DB と連動する仮想マシンライブ移送}
+\author{杉田 光希}
+\date{\today}
+
+\begin{document}
+\maketitle
+%
+% 目次の表示
+\tableofcontents
+
+\newpage
+\section{はじめに}
+\begin{itemize}\tightlist{}
+  \item 仮想マシン (VM) とは，物理マシンをソフトウェアによってエミュレートし，
+  仮想化されたリソースを用いて自身の OS やアプリケーションを動作させる技術である．
+  \begin{itemize}\tightlist{}
+    \item 主にコンソリデーションに用いられ，複数のサーバを統合することでサーバの管理コストを削減することができる．
+    \item 実際に，Google Cloud Platform や Amazon Web Services、Microsoft Azure など
+    Real-world なクラウド環境で使用されている．
+  \end{itemize}
+
+  \item VM ライブ移送とは，実行中の VM を実行の影響を最小限に抑えながら別マシンに移送する技術である．
+  \begin{itemize}\tightlist{}
+    \item 負荷分散や、耐障害性、省電力やパフォーマンス強化のために利用される．
+    \item Pre-copy 手法と Post-copy 手法が主流である．
+    \begin{itemize}\tightlist{}
+    
+      \item ストレージは移送元と移送先でネットワーク経由の共有が可能であることが前提とする．
+    \end{itemize}
+    \item Google のデータセンタで利用されている．
+  \end{itemize}
+
+  \item メモリ使用量が大きいドキュメント DB の移送に時間がかかるという問題がある．
+  \begin{itemize}\tightlist{}
+    \item メモリ使用量が大きいと一度の反復処理に時間がかかり、
+    その間に書き換えられたデータは再度転送する必要がある．
+    \begin{itemize}\tightlist{}
+      \item Amazon Document DB では最大 768GB までメモリを使用できる．
+    \end{itemize}
+    \item 移送が長期化すると移送完了時には VM の最適配置が変化し効果が薄れる．
+  \end{itemize}
+
+  \item ドキュメント DB (DDB) と連動した仮想マシンの移送手法を提案する．
+  \begin{itemize}\tightlist{}
+    \item DDB 上のキャッシュの転送をスキップすることで VM の移送時間を短縮する．
+    \item DDB が稼働している VM においても移送による負荷分散や電力削減といった効果を得る．
+
+  \end{itemize}
+
+  \item 本論文の貢献は以下の通りである．
+  \begin{itemize}\tightlist{}
+    \item DDB が稼働している VM のライブ移送時間を短縮する手法を提案した．
+    DDB 上のキャッシュの転送をスキップすることで VM の移送時間を短縮する．
+    \item 提案手法の実現のためにDDB上のキャッシュをクリアする機構とホストOSでクリアしたページの転送を制御する機構を設計した．
+    \item 提案手法を QEMU 10.2.0，MongoDB 8.2.2 に実装し，
+    キャッシュ転送量と移送時間の大幅な削減に成功した．
+  \end{itemize}
+
+  \item 本論文では，第2章で本研究の背景となる仮想化技術や仮想マシンライブ移送， MongoDB のキャッシュ管理について述べる．
+  第3章では関連研究について紹介し，本研究との違いを述べる．
+  第4章で本研究の提案について述べ，そのアプローチや技術的課題を説明する．
+  第5章で提案手法の設計について述べ，  第6章でその実装について述べる．
+  第7章では提案手法を適用して実験を行い，その結果について述べる．
+  第8章でまとめと今後の課題について述べる．
+
+\end{itemize}
+
+
+\section{背景}
+  \subsection{仮想化技術}
+  \begin{itemize}\tightlist{}
+    \item 物理マシンをソフトウェアによってエミュレートし，仮想化されたリソースを用いて自身の OS やアプリケーションを動作させる技術である
+  \end{itemize}
+    
+    \subsubsection{仮想マシンモニタ}
+    \begin{itemize}\tightlist{}
+      \item ハイパーバイザ型
+      \item ホスト型
+    \end{itemize}
+
+    \subsubsection{仮想化手法}
+    \begin{itemize}\tightlist{}
+      \item 完全仮想化
+      \item 準仮想化
+    \end{itemize}
+    
+    \subsubsection{KVM/QEMU}
+    \begin{itemize}\tightlist{}
+      \item KVM はLinux 環境で VM を実行するためのハイパーバイザとして機能するカーネルモジュールである．
+      \item QEMU は KVM 上で動作する VM のエミュレータである．
+    \end{itemize}
+
+  \subsection{仮想マシンライブ移送}
+  \begin{itemize}\tightlist{}
+    \item 実行中の VM を実行の影響を最小限に抑えながら別マシンに移送する技術である．
+    負荷分散や、耐障害性、省電力やパフォーマンス強化のために利用される．
+  \end{itemize}
+
+    \subsubsection{Pre-copy 手法}
+    \begin{itemize}\tightlist{}
+      \item 移送元で VM を実行しながらメモリを移送先に反復転送し，
+      一定量の転送が完了したら移送元 VM の実行を停止して仮想 CPU を移送先に転送する．
+      そして，移送先 VM に実行を移すという手順で移送を行う．
+    \end{itemize}
+  
+    \subsubsection{Post-copy 手法}
+    \begin{itemize}\tightlist{}
+      \item まず，移送元 VM の実行を停止して仮想 CPU を移送先に転送する．
+      そして，移送先 VM に実行を移した後，移送元のメモリを移送先に反復転送することで移送を行う．
+    \end{itemize}
+
+  \subsection{ドキュメントデータベース}
+  \begin{itemize}\tightlist{}
+    \item データベースとは規則に基づいて整理されたデータの集合体のことで，大量のデータを効率的に管理できる．
+  \end{itemize}
+  
+    \subsubsection{概要}
+    \begin{itemize}\tightlist{}
+      \item リレーショナル型データベース (RDBMS)
+      \item 非リレーショナル型データベース (NoSQL)
+      \begin{itemize}\tightlist{}
+        \item ドキュメント型
+        \item グラフ型
+        \item キーバリュー型
+        \item カラム型
+      \end{itemize}
+    \end{itemize}
+
+    \subsubsection{mongoDB}
+    \begin{itemize}\tightlist{}
+      \item ドキュメント指向型の NoSQL データベース管理システムで，ドキュメント単位でデータを管理する．
+      \item WiredTigerは mongoDB のデフォルトのストレージエンジンであり，B+-tree を用いたデータ管理を行う．
+    \end{itemize}
+
+    \subsection{問題点}
+    \begin{itemize}\tightlist{}
+      \item メモリ使用量が大きいドキュメント DB の移送に時間がかかる 
+      \item メモリ使用量が大きいと反復処理に時間がかかり，その間に書き換えられたデータは再度転送する必要がある
+      \item 移送が長期化すると移送完了時には VM の最適配置が変化し効果が薄れる
+    \end{itemize}
+
+
+\section{関連研究}
+  \subsection{圧縮転送}
+    \subsubsection{Delta Compression}
+    \begin{itemize}\tightlist{}
+      \item  ページの再転送時、差分を抽出して圧縮して転送し、移送先で復元する
+    \end{itemize}
+
+    \subsubsection{Adaptive Memory Compression}
+    \begin{itemize}\tightlist{}
+      \item  状況に応じて圧縮するかどうかを決める
+    \end{itemize}
+  
+  \subsection{vCPU throttling}
+  \begin{itemize}\tightlist{}
+    \item vCPU のタイムスライスを調整してメモリ再送量を調整する
+  \end{itemize}
+  \subsubsection{Optimizing live migration by CPU scheduling}
+    \begin{itemize}\tightlist{}
+      \item  スケジューラを制御し、書き込みの激しいVMに割り当てるCPUタイムスライスを動的に減らす
+    \end{itemize}
+
+    \subsubsection{XvMotion}
+    \begin{itemize}\tightlist{}
+      \item  ダーティレートが転送レートを超えたとき，強制的に書き込み速度をスロットリングする
+    \end{itemize}
+
+    \subsubsection{AdaMig}
+    \begin{itemize}\tightlist{}
+      \item  スロットリングや圧縮，差分圧縮を切り替えて移送する
+    \end{itemize}
+
+  \subsection{アプリケーションのセマンティクスを利用した転送削減}
+    \subsubsection{JAVMM}
+    \begin{itemize}\tightlist{}
+      \item  Java ヒープ領域のガベージデータを転送しない
+    \end{itemize}
+  
+  \subsection{移送の並列化}
+  \subsubsection{PMigrate}
+    \begin{itemize}\tightlist{}
+      \item 移送処理を並列化して移送時間を短縮する
+    \end{itemize}
+
+  \subsection{まとめ}
+  \begin{itemize}\tightlist{}
+    \item 
+  \end{itemize}
+
+
+\section{提案}
+\begin{itemize}\tightlist{}
+  \item DDB が稼働している VM(DDB-running VM) のライブ移送時間を短縮する手法を提案する
+  \item DDB-running VM においても移送による負荷分散や電力削減といった効果を得る
+\end{itemize}
+
+  \subsection{アプローチ}
+  \begin{itemize}\tightlist{}
+    \item 移送元のデータキャッシュ転送をスキップしてストレージからキャッシュを復元する
+    \begin{itemize}\tightlist{}
+      \item DDB が実行している VM の移送開始時に，VM 上で実行している DDB のキャッシュをクリアし，そのページ情報をハイパーバイザに通知する．
+      移送元ホストはその情報をもとに移送先に転送するページの判定を行う．
+    \end{itemize}
+    \item 移送元とストレージでの並列転送により移送先で DDB-running VM のメモリイメージを作成する
+  \end{itemize}
+
+  \subsection{技術的課題}
+  \begin{itemize}\tightlist{}
+    \item どう DB 上の安全にデータキャッシュをスキップするか (→ 先にストレージにフラッシュする) ，
+    \item どうデータキャッシュのページ転送をスキップするか（->DB-OS-Hypervisor を連動させてアドレスを変換する，メモリの反復転送の際に転送の可否を判定），
+    \item どうストレージから復元するか (-> DDB のセマンティクスを利用してファイルから該当データを取得する)
+  \end{itemize}
+
+\section{設計}
+\begin{itemize}\tightlist{}
+  \item 提案手法を実現するための設計を，
+  \begin{itemize}\tightlist{}
+    \item DDB 上のキャッシュクリア
+    \item DDB と ホスト OS 間の連携とページ転送の判定
+    \item キャッシュの復元
+  \end{itemize}
+  の３つに分けて述べる．
+\end{itemize}
+
+  \subsection{DDB 上のキャッシュクリア}
+  \begin{itemize}\tightlist{}
+    \item DDB 内に全てのキャッシュをクリアする機構を追加する．
+    \item ここでは，退避キューにキャッシュページを追加し，DDB のキャッシュを安全に退避させ，
+    このときホスト OS に退避させたキャッシュページの情報を通知する．
+    \item DDB が実行している VM の移送開始時に，この機構を実行してキャッシュのクリアを行う．
+  \end{itemize}
+
+  \subsection{DDB と ホスト OS 間の連携とページ転送の判定}
+  \begin{itemize}\tightlist{}
+    \item DDB 上で退避させたページをホスト OS 側で認識できるように,
+    退避させたページのゲスト仮想アドレスをホスト物理アドレスに変換を行い，
+    ページの転送を判定するビットマップ内の該当するページ番号のビットを設定する．
+    \item メモリの反復転送時に，キャッシュクリア時に作成したビットマップを参照して転送の可否を判定する．
+  \end{itemize}
+
+  \subsection{キャッシュの復元}
+  \begin{itemize}\tightlist{}
+    \item キャッシュクリア時に取得したページの情報をもとに，共有ストレージからキャッシュページを移送先で復元する．
+  \end{itemize}
+
+
+\section{実装}
+\begin{itemize}\tightlist{}
+  \item 提案手法を QEMU 10.2.0，MongoDB 8.2.2 に実装した．
+  \item 本研究では提案手法のうち、キャッシュをクリアしてそれらの転送をスキップする機構の実装を行った．
+  \item 本研究の現段階では，キャッシュの復元はページフォルト時に発生するページインによって行っている．
+\end{itemize}
+
+  \subsection{mongoDB 上のキャッシュクリア機構の実装}
+  \begin{itemize}\tightlist{}
+    \item B+-tree で管理している mongoDB 上のキャッシュの葉ページを退避キューに入れ，
+    それらを既存のキャッシュをクリアする関数を呼び出すことで退避させる．
+  \end{itemize}
+
+  \subsection{mongoDB と QEMU 間の連携}
+  \begin{itemize}\tightlist{}
+    \item mongoDB ではまず，退避させたページのゲスト仮想アドレスをゲスト物理アドレスに変換する．
+    \item QEMU への通知をハイパーコールによって行う．
+    \item QEMU 側では，受け取ったゲスト物理アドレスからページビットマップの設定を非同期処理によって行う．
+  \end{itemize}
+
+  \subsection{転送をスキップするページの判定}
+  \begin{itemize}\tightlist{}
+    \item ページの反復転送の際に，作成したビットマップを参照して転送の可否を判定する．
+    \item 移送先では，転送がスキップされたことだけが通知される．
+  \end{itemize}
+
+
+\section{実験}
+  \subsection{実験環境}
+  \subsection{目的}
+  \subsection{方法}
+  \subsection{実験結果}
+    \subsubsection{メモリ転送量}
+    \subsubsection{総移送時間}
+    \subsubsection{CPU時間}
+    \subsubsection{セットアップ時間}
+    \subsubsection{ダウンタイム}
+
+\section{おわりに}
+  \subsection{まとめ}
+  \subsection{今後の課題}
+
+%
+%
+\end{document}

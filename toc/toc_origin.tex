@@ -34,11 +34,13 @@
 \usepackage{luacode}
 \usepackage{luatexja-otf}
 
-%\usepackage[morisawa-pr6n,deluxe,jis2004]{luatexja-preset}
-\usepackage[hiragino-pron,deluxe,jis2004]{luatexja-preset}
+\usepackage[haranoaji,deluxe,jis2004]{luatexja-preset}
+%\usepackage[yu-win10,deluxe,jis2004]{luatexja-preset}
+%\usepackage[morisawa-pr6n,deluxe,jis2004]{luatexja-preset} % Windows用
+%\usepackage[hiragino-pron,deluxe,jis2004]{luatexja-preset} % Mac用
 
 \IfFileExists{upquote.sty}{\usepackage{upquote}}{}
-\usepackage[utf8x]{luainputenc}
+%\usepackage[utf8x]{luainputenc}
 \fi
 
 \def\OSv{OS\raise.5ex\hbox{v}}
@@ -82,15 +84,16 @@
 ]{geometry}
 \else
 \usepackage[
-    topmargin=-12truemm,
+    top=20truemm,
+    %topmargin=-12truemm,
     headheight=5truemm,
     headsep=3truemm,
     textheight=230mm,
 ]{geometry}
 \fi
 
-\title{目次案}
-\author{金津 穂}
+\title{目次案\par Cloud 環境における Unikernel の起動性能評価と高速化手法の提案}
+\author{杉田 光希}
 \date{\today}
 
 \begin{document}

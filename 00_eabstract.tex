@@ -1,1 +1,14 @@
 %abstract in English
+Virtualization technology emulates physical machines using software, enabling operating systems and applications to run as virtual machines (VMs) in an environment independent from the physical machine using virtualized resources. It is primarily used for consolidation.
+VM live migration is a technology that transfers a running VM to another machine while minimizing impact on its execution.
+It is used for load balancing, fault tolerance, power savings, and performance enhancement.
+There are two migration methods: the Pre-copy method, which transfers the VM's memory to the destination host first before transferring control, and the Post-copy method, which transfers control to the destination host first before transferring the memory.
+A problem exists where migrating VMs running document databases (DDBs) like MongoDB takes significant time.
+Applications with high page write frequencies, like MongoDB,
+can cause repeated transfers to fail to converge when the dirty rate exceeds memory transfer speeds.
+This also increases the amount of pages needing transfer during downtime,
+potentially significantly increasing both total migration time and downtime.
+This paper proposes a VM migration technique coordinated with DDBs.
+By clearing the cache on DDB and skipping those transfers, VM migration time is reduced.
+We implemented the proposed method on QEMU 10.2.0 and MongoDB 8.2.2.
+Experiments demonstrated a significant reduction in both cache transfer volume and migration time.

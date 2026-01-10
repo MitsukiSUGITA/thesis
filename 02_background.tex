@@ -1,7 +1,290 @@
 \chapter{背景}
 
-\section{クラウド仮想化}
+\section{仮想化技術}
+仮想化技術とは物理マシンをソフトウェアによってエミュレートし，仮想化されたリソースを用いて
+自身の OS やアプリケーションを物理マシンから独立した環境で仮想マシン (VM) として
+動作させる技術である．VM は単一の物理マシン上で複数構築することが可能であり，
+異なる OS を同時に動作させることができる．仮想マシンモニタ (VMM) という
+ソフトウェアによって VM の作成，管理が行われる．
 
-\section{仮想化環境}
 
-\section{Unikernel}
+\subsection{仮想マシンモニタ}
+VMM はハイパーバイザとも呼ばれ，物理マシン上で動作して CPU やメモリ等の
+ハードウェアリソースを VM に割り当てる．ソフトウェアとしての VMM は，
+３つの本質的な特徴を持っている\cite{popekFormalRequirementsVirtualizable1974}．
+１つ目の特徴は等価性であり， 仮想環境で実行されるプログラムは物理マシン上で実行される場合と
+同等の結果を示す．２つ目は効率性であり， VM 上で実行されるプログラムの大部分は
+直接ハードウェア上で実行される．そして３つ目はリソース制御であり，VMM は VM に
+割り当てたリソースを完全に制御する．
+
+VMM には，動作させる方法によって大きく分けてハイパーバイザ型とホスト OS 型の
+２種類に分類される．
+ハイパーバイザ型の構成を図\ref{fig:hypervisor}に示す．
+ハイパーバイザ型は， VMM をハードウェアに直接インストールして動作させる方式である.
+ハードウェアリソースに直接アクセスできるため VM を効率的に動作させることができ，
+セキュリティも向上する．
+ホスト OS 型の構成を図\ref{fig:host_os}に示す．
+ホスト OS 型は，VMM が物理マシン上の既存の OS 上でアプリケーションとして動作する方式である．
+インストールが容易であることが利点だが，VM がハードウェアにアクセスする場合に 
+VMM やホスト OS を仲介する必要があるため，ハイパーバイザ型と比べてレイテンシが高く，
+セキュリティも脆弱になる．
+
+\begin{figure}[H]
+  \centering
+  % --- 左側の図 ---
+  \begin{minipage}[t]{0.3\linewidth}
+    \centering
+    \includegraphics[width=\linewidth]{figure/hypervisor.png}
+    \caption{ハイパーバイザ型の構成}
+    \label{fig:hypervisor} % ラベル名は変えておく
+  \end{minipage}
+  \hspace{20mm} % 図と図の間に隙間を空ける
+  % --- 右側の図 ---
+  \begin{minipage}[t]{0.3\linewidth}
+    \centering
+    \includegraphics[width=\linewidth]{figure/host_os.png}
+    \caption{ホスト OS 型の構成}
+    \label{fig:host_os} % ラベル名は変えておく
+  \end{minipage}
+\end{figure}
+
+\subsection{仮想化手法}
+
+仮想化手法は，ゲスト OS に対する変更の有無で完全仮想化と準仮想化に分類することができる．
+
+完全仮想化は，VMM がハードウェアの環境をソフトウェアでエミュレートすることで，
+ゲスト OS を変更せずに仮想化を実現する手法である\cite{barhamXenArtVirtualization} ．
+ゲスト OS に変更を加えないため互換性が高く，様々な OS を動作させることができ，
+ゲスト OS は仮想化されていることを認識しない．
+しかし，VM 内でハードウェアリソースへのアクセスを要する特権命令が実行されると，
+トラップが発生して VMM に制御が移り，VMM がハードウェア操作をエミュレートして処理する．
+そのため，ハードウェアアクセスによるオーバヘッドが発生し，準仮想化と比較してパフォーマンスが低下する傾向がある．
+
+準仮想化はゲスト OS に変更を加え，VMM とゲスト OS 間を連携させて仮想化を実現する手法である\cite{barhamXenArtVirtualization}．
+ゲスト OS を変更する必要があるため完全仮想化に比べて互換性が低く，使用できる OS が限られる．
+しかし，VM 内での特権命令をハイパーコールを用いて VMM と直接通信を行うことで
+ハードウェア操作を効率的に行うため，完全仮想化に比べてハードウェアアクセスの
+オーバヘッドが削減され，高パフォーマンスを実現できる．
+
+\begin{figure}[H]
+  \centering
+  % --- 左側の図 ---
+  \begin{minipage}[t]{0.3\linewidth}
+    \centering
+    \includegraphics[width=\linewidth]{figure/Full_virtualization.png}
+    \caption{完全仮想化}
+    \label{fig:Full_virtualization} % ラベル名は変えておく
+  \end{minipage}
+  \hspace{20mm} % 図と図の間に隙間を空ける
+  % --- 右側の図 ---
+  \begin{minipage}[t]{0.3\linewidth}
+    \centering
+    \includegraphics[width=\linewidth]{figure/Para_virtualization.png}
+    \caption{準仮想化}
+    \label{fig:Para_virtualization} % ラベル名は変えておく
+  \end{minipage}
+\end{figure}
+
+\subsection{KVM/QEMU}
+
+\subsubsection*{KVM}
+KVM (Kernel-based Virtual Machine) \cite{KVM} は Linux に組み込まれた，主に完全仮想化を実現するハイパーバイザ型の VMM である．
+作成された VM は Linux プロセスとして管理されるため，スケジューラやメモリ管理などは Linux カーネル
+の既存の機能を活用でき，top() や kill() などの既存のプロセス管理インフラストラクチャも
+使用できる．KVMの下では，VM はデバイスノード (/dev/kvm) を開くことによって作成され，
+Linux ユーザメモリと同様に，カーネルは不連続なページを割り当てて，独立したゲストアドレス空間を作成する\cite{kivityKvmLinuxVirtual2007}．
+仮想 CPU (vCPU) はそれ自体がスケジューリングされるわけではなく，Linux プロセスの１つとして扱われる．
+
+vCPU の実行フローを図\ref{fig:flowchart}に示す．
+KVM は既存のユーザモードとカーネルモードに加え，
+CPU の仮想化支援機能として追加されたゲストモードを加えた３重のループ構造で vCPU を動作させる．
+まずユーザモードで，ゲストモードとして VM を実行するために ioctl() が発行されカーネルモードに遷移する.
+カーネルは CPU をゲストモードに遷移させ，プロセッサはハードウェアレベルでゲスト OS のコードを直接実行する．
+I/O 処理や割り込みが発生するとゲストモードを終了してカーネルモードに遷移し，
+ゲストモードが中断した理由を解析する．ここで，カーネルで完結する処理であればカーネルモードで処理し，
+実行後にゲストモードを再開する．
+I/O 処理やシグナルの待機がある場合はユーザモードに遷移してエミュレート処理やイベント処理を行い，
+処理が終了したら再び ioctl() を発行してゲストモードでの実行を再開する．
+実際の構成においてユーザモードは QEMU，カーネルモードは KVM，ゲストモードは VM のコードが実行される．
+
+\begin{figure}[H]
+  \centering
+  % figureフォルダの中のファイルを指定する
+  \includegraphics[width=0.7\linewidth]{figure/flowchart.png}
+  \caption{vCPU の実行フロー}
+  \label{fig:flowchart}
+\end{figure}
+
+\subsubsection*{QEMU}
+QEMU (Quick Emulator) \cite{QEMU} は汎用性の高いオープンソースのマシンエミュレータであり，
+様々なホスト OS 上でターゲットとなる OS とそのアプリケーションを，変更を加えずに VM 内で実行することができる．
+QEMU は VM の実行状態を停止させ，その状態の保存や復元を行うことができるため，
+ある OS を別の OS で実行したりデバッグとして用いられる．
+QEMU ではターゲット命令を翻訳ブロックごとに中間表現に変換してからホスト命令に変換を行い，
+その結果をキャッシュすることでホスト CPU と異なる CPU でも高速なエミュレーションを実現している\cite{bellardQEMUFastPortable2005b}．
+QEMU の動作概念図を図\ref{fig:QEMU}に示す．
+
+\begin{figure}[H]
+  \centering
+  % figureフォルダの中のファイルを指定する
+  \includegraphics[width=0.3\linewidth]{figure/QEMU.png}
+  \caption{QEMU の動作概念図}
+  \label{fig:QEMU}
+\end{figure}
+
+\subsubsection*{KVM と QEMU の連携}
+QEMU は単体でも VMM として動作するが，vCPU をソフトウェアでエミュレートするためパフォーマンスが大幅に低下する．
+そのため，KVM と組み合わせて使用することでパフォーマンスを向上させる．
+具体的には，KVM は CPU の仮想化支援機能 を用いてコードを直接実行しつつ，
+Linux カーネルの機能を活用して CPU のスケジューリングやメモリ管理を行うことで
+効率的な動作を提供し，QEMU はユーザレベルで動作して I/O デバイスなどをエミュレートすることで
+ゲスト OS に独立したハードウェア環境を提供し，効率的かつ汎用的な仮想化環境を実現する．
+KVM と QEMU 連携時の動作概念図を図\ref{fig:KVM_QEMU}に示す．
+
+\begin{figure}[H]
+  \centering
+  % figureフォルダの中のファイルを指定する
+  \includegraphics[width=0.3\linewidth]{figure/KVM_QEMU.png}
+  \caption{KVMとQEMU連携時の動作概念図}
+  \label{fig:KVM_QEMU}
+\end{figure}
+
+
+\section{仮想マシンライブ移送}
+仮想マシンライブ移送は， VM を稼働しながらその実行の影響を最小限に抑えつつ別ホストに移送する技術である．
+VM ライブ移送の概略図を図\ref{fig:live_migration}に示す．
+ライブ移送におけるメモリ転送は移送元 VM が実行中にページを移送先に転送するPush フェーズ，
+移送元 VM を停止してページを移送先 VM にコピーした後 VM の実行を再開する Stop-and-Copy フェーズ，
+移送先で VM が再開後，移送元からページを転送する Pull フェーズの３つのフェーズに分けることができる．
+そして VM ライブ移送を行う手法には，を組み合わせて
+移送を行う Pre-copy 手法と，Stop-and-Copy フェーズと Pull フェーズを組み合わせて
+移送を行う Post-copy 手法の２種類に大別される．
+VM ライブ移送は，ダウンタイムと総移送時間の両方を最小化するようバランスがとれた形で
+移送が行われることが重要である\cite{clarkLiveMigrationVirtual}．
+
+\begin{figure}[H]
+  \centering
+  % figureフォルダの中のファイルを指定する
+  \includegraphics[width=0.8\linewidth]{figure/live_migration.png}
+  \caption{VM ライブ移送}
+  \label{fig:live_migration}
+\end{figure}
+
+\subsection{Pre-copy 手法}
+Pre-copy 手法は反復的な Push フェーズと Stop-and-Copy フェーズを組み合わせることで，
+ダウンタイムと総移送時間のバランスを取る手法である\cite{clarkLiveMigrationVirtual}．
+Pre-copy 手法による移送の概略図を図\ref{fig:Pre_copy}に示す．
+移送の流れとしてはまず，移送元ホストから移送先ホストに移送要求が発行され，
+移送先ホストで必要なリソースが利用可能であることを確認する．次に Push フェーズに入り，
+最初のラウンドで全てのページを転送し，次のラウンドではその前のラウンドの処理中に
+変更されたページの転送を反復的に行う．
+残りのメモリ転送量が閾値まで小さくなるか反復回数が上限に達したら Stop-and-Copy フェーズに入り，
+移送元の VM の実行を一時停止して CPU 状態と残りのメモリページが転送される．
+ここの終了時点では移送元ホストと移送先ホストの両方に一貫した一時停止状態の VM が存在し，
+障害が発生した場合には移送元ホストで再開される．そして，移送先ホストが一貫した状態の VM を受信したことを
+移送元ホストに通知し，移送先ホストで VM の実行が再開される．
+
+\begin{figure}[H]
+  \centering
+  % figureフォルダの中のファイルを指定する
+  \includegraphics[width=0.8\linewidth]{figure/Pre_copy.png}
+  \caption{Pre-copy 手法}
+  \label{fig:Pre_copy}
+\end{figure}
+
+\subsection{Post-copy 手法}
+Post-copy 手法は Stop-and-Copy フェーズと Pull フェーズを組み合わせることで，
+Pre-copy 手法よりと少ないメモリ転送量で移送を行う手法である\cite{hinesPostcopyLiveMigration2009}．
+Post-copy 手法による移送の概略図を図\ref{fig:Post_copy}に示す．
+移送の流れとしてはまず，移送元ホスト上の VM の実行を停止し，最小限のデータだけを移送先ホストに転送する．
+そして，移送先ホストで VM の実行を再開させ，Pull フェーズで残りのメモリページを移送先ホストに転送する．
+この時，移送先 VM でページフォルトが発生した際にページの転送を行う Demand Paging や，
+VM が移送先ホストで実行中にバックグラウンドで移送元からページを転送する Active Pushing ，
+ページフォルトが発生した際に，ページの空間的局所性を利用してその周辺のページも転送する Prepaging 
+などの方法で転送を行う．
+
+\begin{figure}[H]
+  \centering
+  % figureフォルダの中のファイルを指定する
+  \includegraphics[width=0.8\linewidth]{figure/Post_copy.png}
+  \caption{Post-copy 手法}
+  \label{fig:Post_copy}
+\end{figure}
+
+\subsection{各手法の特徴}
+これら２つの手法はそれぞれ異なる設計思想に基づいており，それぞれのトレードオフを有している．
+まず，各手法の利点について述べる．
+Pre-copy 手法の利点は，耐障害性が優れていることである．移送管理に対して保守的なアプローチをとっているため，
+移送中に移送先ホストで障害が発生した場合でも，移送元ホストが最新の VM を保持しており，
+そこから復元が可能である．
+Post-copy 手法の利点は，移送の即時性が高いことである．
+Pre-copy 手法では反復的なメモリ転送が完了してから VM の実行権を移すため，
+移送先ホストで VM が実行されるまでに時間を要する．
+一方 Post-copy 手法では，VM の実行権を先に移送先ホストに移してからメモリ転送を行うため，
+メモリ負荷が高い VM であっても移送先ホストに瞬時に再配置することができる．
+また各メモリページが１回しか転送されないため，重複転送のオーバヘッドを回避することができるという利点もある．
+
+次に各手法の欠点について述べる．
+Pre-copy 手法は，反復的なコピーによってネットワークオーバヘッドが発生し，総移送時間も長期化してしまう\cite{zhangSurveyVirtualMachine2018}．
+特に，ページへの書き込み速度 (ダーティレート) がメモリ転送速度を上回ると，反復転送が収束せず
+同じページの再送を繰り返す無駄な転送処理が発生してしまう．
+Post-copy 手法は移送先ホストでページフォルトによる遅延が頻発することが欠点として挙げられる．
+さらに移送先ホストが最新の VM の状態を保持するため，移送中に移送先ホストで障害が発生すると
+VM が壊れてしまうという致命的なリスクも伴う．
+
+このように，両手法には信頼性と即時性でトレードオフが存在するため，
+Pre-copy 手法は読み取り主体のワークロードを持つ VM の移送に適した手法であり，
+Post-copy 手法は大容量メモリや書き込み主体のワークロードを持つ VM の移送に適した手法であると言える．
+
+
+\section{ドキュメントデータベース}
+\subsection{概要}
+ドキュメントデータベース (DDB) とはキーと値のペアを JSON や JSON ライクな
+ドキュメントで管理する，NoSQL データベースの一種である．
+ DDB では値をデータベースの解釈可能な JSON ドキュメントとして保存するため，
+クエリの対象にすることができ，ネストされたような複雑なデータ構造もより便利に扱うことができる．
+またスキーマの制限がないため，新しい属性を持つドキュメントも容易に追加できたりと柔軟な構造を持つ．
+最も一般的用途は，リアルタイム分析，ロギング，そしてブログのような小規模で柔軟な Web サイトの
+ストレージ層である\cite{hechtNoSQLEvaluationUse2011} ．
+
+\subsection{MongoDB}
+代表的な DDB の１つにMongoDB \cite{MongoDB}がある．
+データは JSON のバイナリ形式である BSON で効率的に保存される．
+シャーディングを使用して，大規模なデータセットと高スループット操作を伴う配置をサポートする．
+また，ドキュメントをサーバー間で分散させる自動シャーディングをサポートしている\cite{cattellScalableSQLNoSQL2011}．
+MongoDB のデフォルトのストレージエンジンは WiredTiger であり，
+ドキュメントレベルでの同時実行制御や，チェックポイント，圧縮などの機能を持つ．
+WiredTiger は，256 MB かシステム RAM のサイズに 1GB 引いた値の 50\% の
+いずれか大きい方のサイズを内部キャッシュとして使用する．例えば，5GB の RAM を持つシステムでは，
+2GB の RAM をキャッシュとして使用する ((5GB - 1GB) / 2 = 2GB > 256MB)．
+WiredTiger はテーブルを B-tree として管理する．ルートページと内部ページには他のページの
+ポインタが格納され，葉ページには実際のデータが格納される．
+
+
+\section{問題点}
+VM ライブ移送における問題に，MongoDB のような DDB などのメモリ集約型アプリケーションを
+実行している VM の移送に時間を要することが挙げられる．
+総移送時間の下限は，全メモリを転送するのに要する時間に移送前後のオーバヘッドを加えた値となる \cite{akoushPredictingPerformanceVirtual2010}．
+つまり， VM のメモリサイズが大きくなるほど移送時間を要する．
+特に Pre-copy 手法で移送を行う場合，メモリサイズが大きいと一度の反復転送に時間がかかり，
+その間に書き換えられたデータは再度転送する必要がある．
+MongoDB のような DDB はページへの書き込み頻度が高く，
+ダーティレートがメモリ転送速度を上回ると反復転送が収束せず，
+ダウンタイム中に転送する必要があるページ量も増加するため，
+総移送時間とダウンタイムの両方が大幅に増加してしまう．
+
+このような移送の長期化によって生じる問題点を図\ref{fig:live_migration_problem}に示す．
+移送に時間がかかると，移送完了時にはホストの稼働状況が変化してしまい，
+想定していた負荷分散の効果がなくなってしまう可能性がある．
+さらに，移送処理自体がネットワーク帯域や CPU リソースを消費するため，
+移送が長引けば DDB 自体のサービス品質低下も招く．
+そのため，DDB のようなメモリ集約型アプリケーションにおける移送時間の短縮は，
+解決すべき重要な課題である．
+
+\begin{figure}[H]
+  \centering
+  % figureフォルダの中のファイルを指定する
+  \includegraphics[width=0.9\linewidth]{figure/live_migration_problem.png}
+  \caption{VM ライブ移送における問題点}
+  \label{fig:live_migration_problem}
+\end{figure}
