@@ -1,3 +1,21 @@
+@article{aalamReviewPaperHypervisor2021,
+  title = {A Review Paper on Hypervisor and Virtual Machine Security},
+  author = {Aalam, Zunaid and Kumar, Vinod and Gour, Surendra},
+  date = {2021-08-01},
+  journaltitle = {Journal of Physics: Conference Series},
+  shortjournal = {J. Phys.: Conf. Ser.},
+  volume = {1950},
+  number = {1},
+  pages = {012027},
+  issn = {1742-6588, 1742-6596},
+  doi = {10.1088/1742-6596/1950/1/012027},
+  url = {https://iopscience.iop.org/article/10.1088/1742-6596/1950/1/012027},
+  urldate = {2026-01-16},
+  abstract = {A hypervisor is a computer programme or software that facilitates to create and run multiple virtual machines. It is also known as Virtual Machine Manager (VMM). Due to their popularity, it exploits the attack surface, because the Hypervisor code contains much vulnerability. Since the Hypervisor is a core element of any cloud computing service, it is always on the top priority of the attackers. There are many Software (open source) and Hardware-based Solutions are available in the market to monitor and control the hypervisor activities. This paper summarizes various types of attacks, vulnerabilities, security issues and challenges related to hypervisor and virtual machines.},
+  langid = {english},
+  file = {C:\Users\Mitsuki25\OneDrive - Tokyo University of Agriculture and Technology\lab\論文\Aalam et al. - 2021 - A review paper on hypervisor and virtual machine security.pdf}
+}
+
 @inproceedings{akoushPredictingPerformanceVirtual2010,
   title = {Predicting the {{Performance}} of {{Virtual Machine Migration}}},
   booktitle = {2010 {{IEEE International Symposium}} on {{Modeling}}, {{Analysis}} and {{Simulation}} of {{Computer}} and {{Telecommunication Systems}}},
@@ -23,6 +41,13 @@
   file = {C:\Users\Mitsuki25\Zotero\storage\YUS7NDPN\documentdb.html}
 }
 
+@online{ApacheCouchDB,
+  title = {Apache {{CouchDB}}},
+  url = {https://couchdb.apache.org/},
+  urldate = {2026-01-16},
+  file = {C:\Users\Mitsuki25\Zotero\storage\JN4PD54V\couchdb.apache.org.html}
+}
+
 @article{barhamXenArtVirtualization,
   title = {Xen and the {{Art}} of {{Virtualization}}},
   author = {Barham, Paul and Dragovic, Boris and Fraser, Keir and Hand, Steven and Harris, Tim and Ho, Alex and Neugebauer, Rolf and Pratt, Ian and Warfield, Andrew},
@@ -38,6 +63,25 @@
   abstract = {We present the internals of QEMU, a fast machine emulator using an original portable dynamic translator. It emulates several CPUs (x86, PowerPC, ARM and Sparc) on several hosts (x86, PowerPC, ARM, Sparc, Alpha and MIPS). QEMU supports full system emulation in which a complete and unmodified operating system is run in a virtual machine and Linux user mode emulation where a Linux process compiled for one target CPU can be run on another CPU.},
   langid = {english},
   file = {C:\Users\Mitsuki25\OneDrive - Tokyo University of Agriculture and Technology\lab\論文\Bellard - 2005 - QEMU, a Fast and Portable Dynamic Translator 2.pdf}
+}
+
+@article{carvalhoPerformanceEvaluationNoSQL2023,
+  title = {Performance {{Evaluation}} of {{NoSQL Document Databases}}: {{Couchbase}}, {{CouchDB}}, and {{MongoDB}}},
+  shorttitle = {Performance {{Evaluation}} of {{NoSQL Document Databases}}},
+  author = {Carvalho, Inês and Sá, Filipe and Bernardino, Jorge},
+  date = {2023-02-01},
+  journaltitle = {Algorithms},
+  shortjournal = {Algorithms},
+  volume = {16},
+  number = {2},
+  pages = {78},
+  issn = {1999-4893},
+  doi = {10.3390/a16020078},
+  url = {https://www.mdpi.com/1999-4893/16/2/78},
+  urldate = {2026-01-16},
+  abstract = {NoSQL document databases emerged as an alternative to relational databases for managing large volumes of data. NoSQL document databases ensure big data storage and good query performance and are essential when the data scheme does not fit into the scheme of relational databases. They store their data in the form of documents and can handle unstructured, semi-structured, and structured data. This work evaluates the top three open-source NoSQL document databases: Couchbase, CouchDB, and MongoDB with Yahoo! Cloud Serving Benchmark (YCSB), which has become a standard for NoSQL database evaluation. The performance and scale-up of document databases are assessed using YCSB workloads with a different number of records and threads, where the runtime is measured for each database. In the experimental evaluation, we concluded that MongoDB is the database with the best runtime, except for the workload composed by scan operations. In addition, we identified CouchDB as the database with the best scale-up when varying the number of threads.},
+  langid = {english},
+  file = {C:\Users\Mitsuki25\OneDrive - Tokyo University of Agriculture and Technology\lab\論文\Carvalho et al. - 2023 - Performance Evaluation of NoSQL Document Databases Couchbase, CouchDB, and MongoDB.pdf}
 }
 
 @article{cattellScalableSQLNoSQL2011,
@@ -139,6 +183,42 @@
   file = {C:\Users\Mitsuki25\Zotero\storage\PLMBZALK\datacenters.google.html}
 }
 
+@inproceedings{houApplicationassistedLiveMigration2015,
+  title = {Application-Assisted Live Migration of Virtual Machines with {{Java}} Applications},
+  booktitle = {Proceedings of the {{Tenth European Conference}} on {{Computer Systems}}},
+  author = {Hou, Kai-Yuan and Shin, Kang G. and Sung, Jan-Lung},
+  date = {2015-04-17},
+  pages = {1--15},
+  publisher = {ACM},
+  location = {Bordeaux France},
+  doi = {10.1145/2741948.2741950},
+  url = {https://dl.acm.org/doi/10.1145/2741948.2741950},
+  urldate = {2026-01-15},
+  abstract = {Live migration of virtual machines (VMs) can consume excessive time and resources, and may affect application performance significantly if VM memory pages get dirtied faster than their content can be transferred to the destination. Existing approaches to this problem transfer memory content faster with high-speed networks, slow down the dirtying of memory pages by throttling the execution of applications, or reduce the amount of memory content to be transferred, for example, using compression. However, these approaches incur high resource costs or application performance penalties. In this paper, we propose to skip the transfer of VM memory pages that need not be migrated for the execution of running applications at the destination, by exploiting applications’ assistance. We have designed a generic framework for application-assisted live migration and then used it to build and evaluate JAVMM, which migrates VMs running various types of Java applications skipping the transfer of garbage in Java memory. Our experimental results show that JAVMM can reduce the completion time, the network traffic of transferring memory pages, and the application downtime of Java VM migration, all by up to over 90\%, compared to the vanilla Xen VM migration, without incurring noticeable performance penalty to applications.},
+  eventtitle = {{{EuroSys}} '15: {{Tenth EuroSys Conference}} 2015},
+  isbn = {978-1-4503-3238-5},
+  langid = {english},
+  file = {C:\Users\Mitsuki25\OneDrive - Tokyo University of Agriculture and Technology\lab\論文\Hou et al. - 2015 - Application-assisted live migration of virtual machines with Java applications.pdf}
+}
+
+@article{jinOptimizingLiveMigration2011,
+  title = {Optimizing the Live Migration of Virtual Machine by {{CPU}} Scheduling},
+  author = {Jin, Hai and Gao, Wei and Wu, Song and Shi, Xuanhua and Wu, Xiaoxin and Zhou, Fan},
+  date = {2011-07},
+  journaltitle = {Journal of Network and Computer Applications},
+  shortjournal = {Journal of Network and Computer Applications},
+  volume = {34},
+  number = {4},
+  pages = {1088--1096},
+  issn = {10848045},
+  doi = {10.1016/j.jnca.2010.06.013},
+  url = {https://linkinghub.elsevier.com/retrieve/pii/S1084804510001116},
+  urldate = {2026-01-15},
+  abstract = {Live migration has been proposed to reduce the downtime for migrated VMs by pre-copying the generated run-time memory state files from the original host to the migration destination host. However, if the rate for such a dirty memory generation is high, it may take a long time to accomplish live migration because a large amount of data needs to be transferred. In extreme cases when dirty memory generation rate is faster than pre-copy speed, live migration will fail. In this work we address the problem by designing an optimization scheme for live migration, under which according to precopy speed, the VCPU working frequency may be reduced so that at a certain phase of the pre-copy the remaining dirty memory can reach a desired small amount. The VM downtime during the migration can be limited. The scheme works for the scenario where the migrated application has a high memory writing speed, or the pre-copy speed is slow, e.g., due to low network bandwidth between the migration parties. The method improves migration liveness at the cost of application performance, and works for those applications for which interruption causes much more serious problems than quality deterioration. Compared to the original live migration, our experiments show that the optimized scheme can reduce up to 88\% of application downtime with an acceptable overhead.},
+  langid = {english},
+  file = {C:\Users\Mitsuki25\OneDrive - Tokyo University of Agriculture and Technology\lab\論文\Jin et al. - 2011 - Optimizing the live migration of virtual machine by CPU scheduling.pdf}
+}
+
 @article{kivityKvmLinuxVirtual2007,
   title = {Kvm: The {{Linux Virtual Machine Monitor}}},
   author = {Kivity, Avi and Kamay, Yaniv and Laor, Dor},
@@ -182,6 +262,32 @@
   url = {https://www.qemu.org/},
   urldate = {2026-01-05},
   file = {C:\Users\Mitsuki25\Zotero\storage\AKANH87C\www.qemu.org.html}
+}
+
+@inproceedings{svardEvaluationDeltaCompression2011,
+  title = {Evaluation of Delta Compression Techniques for Efficient Live Migration of Large Virtual Machines},
+  booktitle = {Proceedings of the 7th {{ACM SIGPLAN}}/{{SIGOPS}} International Conference on {{Virtual}} Execution Environments},
+  author = {Svärd, Petter and Hudzia, Benoit and Tordsson, Johan and Elmroth, Erik},
+  date = {2011-03-09},
+  pages = {111--120},
+  publisher = {ACM},
+  location = {Newport Beach California USA},
+  doi = {10.1145/1952682.1952698},
+  url = {https://dl.acm.org/doi/10.1145/1952682.1952698},
+  urldate = {2026-01-15},
+  abstract = {Despite the widespread support for live migration of Virtual Machines (VMs) in current hypervisors, these have significant shortcomings when it comes to migration of certain types of VMs. More specifically, with existing algorithms, there is a high risk of service interruption when migrating VMs with high workloads and/or over low-bandwidth networks. In these cases, VM memory pages are dirtied faster than they can be transferred over the network, which leads to extended migration downtime. In this contribution, we study the application of delta compression during the transfer of memory pages in order to increase migration throughput and thus reduce downtime. The delta compression live migration algorithm is implemented as a modification to the KVM hypervisor. Its performance is evaluated by migrating VMs running different type of workloads and the evaluation demonstrates a significant decrease in migration downtime in all test cases. In a benchmark scenario the downtime is reduced by a factor of 100. In another scenario a streaming video server is live migrated with no perceivable downtime to the clients while the picture is frozen for eight seconds using standard approaches. Finally, in an enterprise application scenario, the delta compression algorithm successfully live migrates a very large system that fails after migration using the standard algorithm. Finally, we discuss some general effects of delta compression on live migration and analyze when it is beneficial to use this technique.},
+  eventtitle = {{{VEE}} '11: {{ACM SIGPLAN}}/{{SIGOPS International Conference}} on {{Virtual Execution Environments}}},
+  isbn = {978-1-4503-0687-4},
+  langid = {english},
+  file = {C:\Users\Mitsuki25\OneDrive - Tokyo University of Agriculture and Technology\lab\論文\Svärd et al. - 2011 - Evaluation of delta compression techniques for efficient live migration of large virtual machines.pdf}
+}
+
+@article{veraDataModelingNoSQL,
+  title = {Data {{Modeling}} for {{NoSQL Document-Oriented Databases}}},
+  author = {Vera, Harley and Boaventura, Wagner and Holanda, Maristela and Guimaraes, Valeria and Hondo, Fernanda},
+  abstract = {In database technologies, some of the new issues increasingly debated are non-conventional applications, including NoSQL (Not only SQL) databases, which were initially created in response to the needs for better scalability, lower latency and higher flexibility in an era of bigdata and cloud computing. These non-functional aspects are the main reason for using NoSQL database. However, currently there are no systematic studies on data modeling for NoSQL databases, especially the document-oriented ones. Therefore, this article proposes a NoSQL data modeling standard in the form of ER diagrams, introducing modeling techniques that can be used on documentoriented databases. On the other hand the purpose of this article is not structure the data using the model proposed, but it does helping with the visualization of data. In addition, to validate the proposed model, a study case was implemented using genomic data.},
+  langid = {english},
+  file = {C:\Users\Mitsuki25\OneDrive - Tokyo University of Agriculture and Technology\lab\論文\Vera et al. - Data Modeling for NoSQL Document-Oriented Databases.pdf}
 }
 
 @article{zhangSurveyVirtualMachine2018,
