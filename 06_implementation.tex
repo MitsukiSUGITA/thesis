@@ -1,5 +1,253 @@
 \chapter{実装}
+本章では提案手法の実装について述べる．
+本研究では，VMM として QEMU 10.2.0 上に，DDB として MongoDB 8.2.2 上に実装を行った．
 
 \section{mongoDB 上のキャッシュクリア機構の実装}
-\section{mongoDB と QEMU 間の連携}
-\section{転送をスキップするページの判定}
+提案機構では，キャッシュ解放フェーズに入る前の準備として，
+WiredTiger の標準 API である WT\_SESSION::checkpoint を呼び出してチェックポイント処理を実行する．
+これにより，一括でキャッシュ上の全ての変更をディスクに反映し，全ページをクリーンな状態とする．
+
+キャッシュ解放処理の開始時には自作の制御フラグを有効化することで，
+後述する既存のキャッシュ退避関数において，通常の LRU アルゴリズムとは異なる
+本提案手法のアルゴリズムへ分岐させる．
+解放プロセスでは，退避候補ページの収集とページ退避を行う関数を反復的に呼び出すことにより，
+キャッシュ内に存在する可能な限り多くのリーフページの解放し，それらに対応する GPA の収集を行う．
+
+\subsection{退避候補ページの収集}
+退避候補ページは主に \_\_evict\_lru\_walk()，そこから呼び出される\_\_evict\_walk()，
+さらにここから呼び出される \_\_evict\_walk\_tree() を通じて収集される．
+本提案機構ではこれら既存の関数に対して，
+探索制限の撤廃とリーフページの限定収集を行うように実装した．
+
+\_\_evict\_lru\_walk() は退避キュー補充処理の最上位の関数であり，
+本来は \_\_evict\_walk() を呼び出してキューに候補ページを補充させた後，
+アクセス頻度や重要度によって並び替えを行い，
+キューに残ったページの上位半数程度を実際の退避候補として選定する役割を担う．
+本提案機構では，この選定において候補ページの切り捨てを無効化し，
+下位関数で収集されたページをそのまま退避対象とする．
+
+\_\_evict\_walk() は，主にページの探索を行う B+Tree を選定する関数である．
+本来 WiredTiger は効率性と探索最適化のために，
+キャッシュ使用率の低い B+Tree や，最近アクセスされた B+Tree などに対して
+探索をスキップする仕組みを持つが，本提案機構ではこれらを無効化する．
+これにより，全ての B+Tree 内を探索対象とし，あらゆるリーフページを網羅的に収集する．
+
+\_\_evict\_walk\_tree() は，選定された B+Tree 内を走査し，
+退避候補となるページを収集する関数である．
+本提案機構では，収集数や探索回数に基づくヒューリスティックな探索打ち切り判定を無効化し，
+B+Tree 内の全てのページを探索するか，キューが満杯になるまで探索を継続する．
+また，ページの収集時にページの種類を判別し，内部ページを収集対象から除外する．
+これにより，リーフページだけを選別し，最大限退避キューに収集する．
+
+\subsection{ページの解放}
+退避キューに収集されたページは \_\_evict\_page() によって 1 ページずつ退避される．
+本提案機構では，この関数内でページを退避する前にそのページに対応する GPA を特定し，
+退避が成功した際にそれらを多段リスト構造に追加する処理を実装した．
+
+アドレスを収集する対象となる領域は，ディスクイメージと更新リストのアドレス情報である．
+ディスクイメージはページ管理構造体 WT\_PAGE のメンバ dsk によって参照される．
+dsk はヘッダ情報とデータ本体を含む連続したメモリブロックの先頭アドレスを指しており，
+本提案機構ではこのブロック全体を転送スキップ対象とする．
+図\ref{fig:WT_UPDATE}に，MongoDB における更新リストの管理方法を示す．
+MongoDB において，更新リストはページ内の各行に対応したポインタ配列 mod\_row\_update と，
+そこから各行の変更履歴をリストとして保持する WT\_UPDATE 構造体によって管理されている．
+そのため，ポインタ配列自体と各行の変更データを保持する WT\_UPDATE 構造体のリストを
+転送スキップ対象とする．
+
+\begin{figure}[H]
+  \centering
+  \includegraphics[width=0.7\linewidth]{figure/WT_UPDATE.png}
+  \caption{更新リストの管理}
+  \label{fig:WT_UPDATE}
+\end{figure}
+
+図\ref{fig:Page_Alignment}に，対象領域における転送スキップページの決定方法を示す．
+転送スキップ候補となるメモリブロックに対しては，
+対象データがページ全体を完全に占有しているページの先頭アドレスを登録する．
+１つのページ内に対象データと他のデータが混在している場合，
+そのページの転送をスキップすることで，データの不整合が生じるリスクがある．
+そのため，対象領域の開始アドレスを次のページ境界まで切り上げ，
+終了アドレスを前のページ境界まで切り捨てることでアライメントを行う．
+そしてその間に含まれるページのみを抽出することで，
+データの端部が含まれるページやサイズが１ページに満たないページを除外し，
+安全に転送をスキップできるページのみを抽出する．
+
+\begin{figure}[H]
+  \centering
+  \includegraphics[width=0.5\linewidth]{figure/Page_Alignment.png}
+  \caption{対象領域における転送スキップページの決定}
+  \label{fig:Page_Alignment}
+\end{figure}
+
+抽出したページの先頭アドレスから GPA へのアドレス変換は，自作関数 gva\_to\_gpa() で行う．
+この関数を，コード\ref{code:gva_to_gpa}に示す．
+Linux では，/proc/self/pagemap を通じてユーザ空間から仮想メモリと
+物理メモリのマッピング情報を参照する．
+そのため，gva\_to\_gpa() はこのページテーブルを用いてアドレス変換を行う．
+また，関数内ではページテーブルから読み込むシステムコール (pread) のオーバヘッドを減らすために，
+一度の呼び出しで 512 エントリ分をまとめて読み込み，
+pagemap\_buffer にキャッシュとして保持している．
+変換処理では，読み取った 64 ビットの pfn\_item を解析することで変換を行う．
+まず最上位ビットを参照することで，ページが物理メモリ上に存在するかを確認し，
+下位 55 ビットの物理ページ番号 (PFN) を抽出する．
+そして，この PFN とページサイズの積を求め，
+この値に元の GVA のページ内オフセットを加算することで GPA を求める．
+
+\begin{lstlisting}[caption=gva\_to\_gpa(), label=code:gva_to_gpa, language=C]
+uint64_t pagemap_buffer[512];
+uintptr_t buffer_base_vpn = (uintptr_t)-1;
+
+uintptr_t gva_to_gpa(void *vaddr) {
+    uint64_t vpn = (uintptr_t)vaddr / 4096;
+    uint64_t pfn_item = 0;
+
+    if (buffer_base_vpn != -1 && vpn >= buffer_base_vpn && 
+        vpn < buffer_base_vpn + PAGEMAP_CACHE_COUNT) {
+        pfn_item = pagemap_buffer[vpn - buffer_base_vpn];
+    } else {
+        buffer_base_vpn = (vpn / 512) * 512;
+        uint64_t offset = buffer_base_vpn * 8;
+
+        if (pread(pagemap_fd, pagemap_buffer, sizeof(pagemap_buffer), offset) < 8) {
+            buffer_base_vpn = -1; return 0;
+        }
+        pfn_item = pagemap_buffer[vpn - buffer_base_vpn];
+    }
+
+    if ((pfn_item & (1ULL << 63)) == 0) return 0;    
+    uint64_t pfn = pfn_item & ((1ULL << 55) - 1);
+    return (pfn * 4096) + ((uintptr_t)vaddr % 4096);
+}
+\end{lstlisting}
+
+転送スキップ対象となるメモリ領域の GPA を特定した後，
+既存の下位関数である \_\_wt\_evict() を呼び出してページの退避を実行する．
+そしてページの解放に成功した場合に限り，特定した GPA を多段リスト構造の最下層に登録することで，
+転送が不要となった安全なページのみをスキップ対象として管理する．
+
+\section{mongoDB と QEMU 間の連携機構の実装}
+本節では，6.1 節で MongoDB 側において収集された転送スキップ対象ページの GPA リストを，
+QEMU 側で受け取りビットマップへ反映させるまでの実装について述べる．
+QEMU 側での処理は大きく分けて，MongoDB からの通知を受け取る受信処理と，
+受け取った GPA を解析して QEMU が管理する形式のビットマップを構築する
+アドレス解析処理の 2 段階で構成される．
+
+\subsection{I/O ポートによる通知とボトムハーフ機構}
+6.1 節で収集した転送をスキップする GPA リストの通知は，
+I/O ポートを用いたハイパーコールにより実装する．
+MongoDB は多段リスト構造のルート GPA を I/O ポート経由で QEMU に渡す．
+このとき，64 ビットのルート GPA を 32 ビットに分割してデータ用ポートへ書き込み，
+最後にトリガー用ポートへの書き込みを行う計 3 回の outl 命令によって
+QEMU 側に制御を移し，MongoDB 側の通知処理を完了する．
+
+QEMU 側の受信処理では，QEMU のボトムハーフ機構により非同期処理を実現する．
+MongoDB からの通知を受け取る I/O ポートハンドラ内では，
+受信したルート GPA を QEMU 側の変数に格納し，
+qemu\_bh\_schedule() を呼び出してボトムハーフの実行を予約してゲスト OS に制御を戻す．
+これにより，vCPU スレッド内での処理を最小限に抑え，
+メモリ参照やアドレス変換を伴う，高コストなアドレス解析処理を
+メインスレッド側で非同期的に実行することで，
+ゲスト OS の実行性能への影響を最小限にする．
+
+\subsection{アドレス解析機構}
+アドレス解析処理ではまず，保持していたルート GPA を起点として多段リスト構造を順次読み込み，
+最下層の転送スキップ対象ページの GPA を特定する．
+この処理を，自作関数 resolve\_skip\_address() によって実装する．
+この関数をコード\ref{code:resolve_skip_address}に示す．
+
+GPA と QEMU プロセス内の HVA はアドレス空間が異なる．
+そのため関数内では，cpu\_physical\_memory\_read() を用いて，
+HVA へのアドレス変換を介してそのデータを読み込み，ローカル変数に複製する．
+この処理を最上位層，中間層と順に行い，最下層のスキップ対象ページの GPA リストを特定し，
+後述する update\_skip\_bitmap() にそのアドレスを渡す．
+このように，GPA が格納されている各階層のリストを QEMU 内のバッファに格納して，
+MongoDB で管理していたリスト構造を QEMU 側で適切に解釈することで，
+MongoDB と QEMU 間のセマンティクスギャップを解消する．
+
+\begin{lstlisting}[caption=resolve\_skip\_address(), label=code:resolve_skip_address, language=C]
+typedef struct {
+    uint64_t entry_count;
+    uint64_t next_gpas[510];
+} Directory_Node;
+
+void resolve_skip_address(hwaddr root_gpa) {
+    Directory_Node root;
+    cpu_physical_memory_read(root_gpa, &root, sizeof(root));
+
+    for (int i = 0; i < root.entry_count; i++) {
+        hwaddr mid_gpa = root.next_gpas[i];
+        if (mid_gpa == 0) continue;
+        
+        Directory_Node mid;
+        cpu_physical_memory_read(mid_gpa, &mid, sizeof(mid));
+        for (int j = 0; j < mid.entry_count; j++) {
+            if (mid.next_gpas[j] != 0) update_skip_bitmap(mid.next_gpas[j]);
+        }
+    }
+}
+\end{lstlisting}
+
+特定した転送スキップ対象ページのリストに含まれる各々の GPA に対して，
+QEMU の移送制御で用いられる管理形式へと変換を行う．
+この処理を行う自作関数 update\_skip\_bitmap() をコード\ref{code:update_skip_bitmap}に示す．
+QEMU ではメモリを RAMBlock 構造体によってブロック単位で管理しており，
+各ページは RAMBlock ごとのオフセットに基づくビットマップによって転送の可否が判定されている．
+そのため，まず cpu\_physical\_memory\_map() を用いて転送スキップ対象の GPA を HVA に変換し，
+得られた HVA を qemu\_ram\_block\_from\_host() に渡して
+該当する RAMBlock 内オフセットを特定する．
+
+そして，アドレス変換によって得られた RAMBlock 内オフセットをもとに
+スキップ用のビットマップを構築する．
+この際，特定した RAMBlock が メインメモリ領域 (pc.ram) であることを確認する．
+本実装では，MongoDB 上のキャッシュはメインメモリ領域から割り当てられることを前提としており，
+この判定により他のメモリ領域への誤った操作を防ぐ．
+ビットマップ登録処理では，特定された RAMBlock 内オフセットをページサイズで割り，
+ビットマップ上のインデックス (ページ番号) に変換し，
+ビットマップ内の該当ビットをセットする．
+最後に，cpu\_physical\_memory\_unmap() を呼び出してアドレスマッピングを解放する．
+以上の一連の処理により，転送スキップ対象ページを確定させる．
+
+\begin{lstlisting}[caption=update\_skip\_bitmap(), label=code:update_skip_bitmap, language=C]
+typedef struct {
+    uint64_t count;
+    uint64_t total_pages;
+    uint64_t gpa_list[510];
+} SKIP_PAGE_GPA_LIST;
+
+static void update_skip_bitmap(uint64_t batch_gpa) {
+    SKIP_PAGE_GPA_LIST gpa_list;
+    cpu_physical_memory_read(batch_gpa, &gpa_list, sizeof(gpa_list));
+
+    for (uint64_t i = 0; i < gpa_list.count; i++) {
+        hwaddr target_gpa = gpa_list.gpa_list[i];
+        hwaddr len = TARGET_PAGE_SIZE;
+        void *hva = cpu_physical_memory_map(target_gpa, &len, false);
+        
+        ram_addr_t offset_in_block;
+        RAMBlock *block = qemu_ram_block_from_host(hva, false, &offset_in_block);
+            
+        if (block && strcmp(block->idstr, "pc.ram") == 0) {
+            uint64_t page_idx = offset_in_block >> TARGET_PAGE_BITS;
+            test_and_set_bit(page_idx, global_skip_bitmap);
+        }
+        cpu_physical_memory_unmap(hva, len, false, len);
+    }
+}
+\end{lstlisting}
+
+\section{転送をスキップするページの判定と受信処理}
+Pre-copy 手法の反復転送処理において，ram\_save\_host\_page() でダーティページの転送を行っているため，
+ここに MongoDB から通知されたページの転送を制御する実装を行う．
+具体的には，ダーティビットマップにより転送が必要だと判定されたページに対し，
+ダーティビットをクリアしたうえで，さらにスキップ用のビットマップによる判定を加える．
+本実装ではメインメモリ領域 (pc.ram) を対象とするため，
+対象ページが pc.ram ブロックに属しており，スキップ用のビットマップに登録されているという条件を満たした場合，
+通常の 4KB の実データ転送を行わず，
+新たに追加した RAM\_SAVE\_FLAG\_SKIPPED フラグを含む通常 8 バイトのヘッダ情報を転送する．
+これにより，不要なページデータの転送に伴う帯域消費と CPU コストを削減し，
+反復転送処理の高速化を実現する．
+
+移送先ホスト側において RAM\_SAVE\_FLAG\_SKIPPED フラグを含むヘッダ情報を受けとった場合，
+メモリへの書き込み処理を行わずに受信処理を終了する．
+これにより，転送をスキップしたページは初期状態として維持されるため，
+移送先ホストでの実行再開後，WiredTiger によって透過的にキャッシュ再構築が行われる．

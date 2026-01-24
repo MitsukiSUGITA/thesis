@@ -92,7 +92,7 @@ VMM やホスト OS を仲介する必要があるため，ハイパーバイザ
   \end{minipage}
 \end{figure}
 
-\subsection{KVM/QEMU}
+\subsection{QEMU/KVM}
 
 \subsubsection*{KVM}
 KVM (Kernel-based Virtual Machine) \cite{KVM} は Linux に組み込まれた，主に完全仮想化を実現するハイパーバイザ型の VMM である．
@@ -169,7 +169,9 @@ CPU やメモリへのアクセスは KVM が介入することで物理ハー�
 
 
 \section{仮想マシンライブ移送}
-仮想マシンライブ移送は， VM を稼働しながらその実行の影響を最小限に抑えつつ別ホストに移送する技術である．
+仮想マシンライブ移送は， VM を稼働しながらその実行の影響を最小限に抑えつつ別ホストに移送する技術であり，
+負荷分散\cite{woodBlackboxGrayboxStrategies}や，耐障害性\cite{nagarajanProactiveFaultTolerance2007a}，
+省電力\cite{dasLiteGreenSavingEnergy}，パフォーマンス向上\cite{bobroffDynamicPlacementVirtual2007}などに利用されている．
 VM ライブ移送の概略図を図\ref{fig:live_migration}に示す．
 ライブ移送におけるメモリ転送は移送元 VM が実行中にページを移送先に転送する Push フェーズ，
 移送元 VM を停止してページを移送先 VM にコピーした後 VM の実行を再開する Stop-and-Copy フェーズ，
@@ -202,7 +204,7 @@ Post-copy 手法では移送時間の増加だけでなく，
 
 \subsection{Pre-copy 手法}
 Pre-copy 手法は反復的な Push フェーズと Stop-and-Copy フェーズを組み合わせることで，
-ダウンタイムと総移送時間の両方を最小化するようバランスがとれた形で移送を行う手法である\cite{clarkLiveMigrationVirtual}．
+ダウンタイムと総移送時間の両方を最小化するようバランスがとれた形で移送を行う手法である\cite{clarkLiveMigrationVirtuala}．
 Pre-copy 手法による移送の概略図を図\ref{fig:Pre_copy}に示す．
 移送の流れとしてはまず，移送元ホストから移送先ホストに移送要求が発行され，
 移送先ホストで必要なリソースが利用可能であることを確認する．次に Push フェーズに入り，
@@ -292,7 +294,7 @@ MongoDB のデフォルトのストレージエンジンは WiredTiger であり
 WiredTiger は，256 MB かシステム RAM のサイズに 1GB 引いた値の 50\% の
 いずれか大きい方のサイズを内部キャッシュとして使用する．例えば，5GB の RAM を持つシステムでは，
 2GB の RAM をキャッシュとして使用する ((5GB - 1GB) / 2 = 2GB > 256MB)．
-WiredTiger はテーブルを B-tree として管理する．ルートページと内部ページには他のページの
+WiredTiger はテーブルを B+Tree として管理する．ルートページと内部ページには他のページの
 ポインタが格納され，リーフページには実際のデータが格納される．
 このデータ管理において，WiredTiger はリーフページの実データを，
 ディスクから読み込んだディスクイメージと，

@@ -1,10 +1,138 @@
 \chapter{実験}
+本章では，提案手法による VM ライブ移送パフォーマンスの実験について述べる．
+
 \section{実験環境}
-\section{方法}
+実験環境は移送を行うホストマシン 2 台，共有ストレージ用のマシン 1 台から構成される．
+実験環境の概要図を図\ref{fig:exp_machine}に，各マシンの構成を表\ref{tab:machine_spec}に示す．
+本実験は，同一ハードウェア構成を持つ 2 台の移送用マシンと，
+VM のディスクイメージを共有するための NFS サーバマシンで構成される．
+移送用マシンの CPU は Intel Xeon E-2124 (3.30 GHz, 4 コア 4 スレッド) を，
+メモリは 64GB を搭載している．
+共有ストレージ用マシンの CPU はIntel Xeon Gold 5215 (2.50 GHz, 10 コア 20 スレッド) を，
+メモリは 128GB を搭載している．
+全てのマシンは 1 Gbps のイーサネットで接続されており，
+OS として Ubuntu 24.04 (Linux 6.8.0) が稼働している．
+VMM としては QEMU/KVM 10.2.0 をベースに提案機構を実装したものを使用する．
+ライブ移送の対象となる VM には 2 vCPU を割り当て，
+ゲスト OS はホストマシン同様，Ubuntu 24.04 (Linux 6.8.0) が稼働している．
+また，VM のメモリサイズは本実験におけるパラメータとして変化させる．
+そして，VM 上では DDB として提案機構を組み込んだ MongoDB 8.2.2 を動作させる．
+
+\begin{figure}[H]
+  \centering
+  \includegraphics[width=0.8\linewidth]{figure/exp_machine.png}
+  \caption{実験環境の概要図}
+  \label{fig:exp_machine}
+\end{figure}
+
+\begin{table}[H] % [H]でその場所に固定、[htbp]なら自動配置
+  \centering
+  \caption{実験に使用した各マシンの構成} % 表のタイトルは「上」に書く
+  \label{tab:machine_spec} % 参照用のラベル
+  \begin{tabular}{ccc} \toprule % lは「左寄せ」cは「中央」の意味
+    マシン & CPU & メモリ \\ \midrule\midrule
+    ホストマシン     & Intel Xeon E-2124 CPU @ 3.30GHz (4C/4T) & 64GB \\
+    ストレージマシン & Intel Xeon Gold 5215 CPU @ 2.50GHz (10C/20T) & 128GB \\
+    仮想マシン      & 2vCPU & 可変 \\ \bottomrule
+  \end{tabular}
+\end{table}
+
+\section{実験方法}
+提案手法によるライブ移送を従来の Pre-copy 手法と比較し，性能を評価する．
+実験の初期状態として，移送開始前に VM 上で動作する MongoDB の
+WiredTiger キャッシュサイズを VM メモリ割り当て量の 95\% に設定する．
+そして，キャッシュ内のダーティページ占有率が 95\% となるように書き込みと更新を行うことで，
+VM 上で動作する MongoDB の大量データがメモリ上に保持されている状況を生成する．
+この書き込み処理終了後のアイドル状態の VM に対して移送を実行し，
+その際の総移送時間，セットアップ時間，ダウンタイム，
+CPU 時間，メモリ転送量を計測する．
+以上の移送実験において，両手法において VM に 8GB, 16GB, 32GB, 48GB, 60GB と,
+割り当てるメモリサイズを変化させて実験を行う．
+また，各条件での実験を計 5 回行い，それらの平均の実験結果として採用する．
+
 \section{実験結果}
-\subsection{メモリ転送量}
 \subsection{総移送時間}
-\subsection{CPU時間}
-\subsection{セットアップ時間}
+実験における総移送時間の結果を図\ref{fig:exp_migration_time}に示す．
+実験結果より，全てのメモリサイズにおいて，
+総移送時間は従来の Pre-copy 手法と比較して大幅に短縮され，約半分の時間で移送を完了した．
+この総移送時間には，提案手法における MongoDB 上のキャッシュを解放する時間も含まれているため，
+キャッシュ解放によるオーバヘッドを加味しても，
+移送プロセス全体の大幅な高速化が実現できているといえる．
+また，メモリサイズが大きくなるにつれて時間短縮の効果が顕著になり，
+メモリサイズが 60GB の条件下では最大約 56\% の短縮を達成した．
+このことから，特にメモリサイズが大きい環境において，提案手法の優位性が高まると考えられる．
+
+\begin{figure}[H]
+  \centering
+  \includegraphics[width=0.8\linewidth]{figure/exp_migration_time.png}
+  \caption{総移送時間}
+  \label{fig:exp_migration_time}
+\end{figure}
+
+
+\subsection{メモリ転送量}
+実験におけるメモリ転送量の結果を図\ref{fig:exp_transffer_data}に，
+転送ページ数の結果を図\ref{fig:exp_transffer_page}に示す．
+実験結果より，全てのメモリサイズにおいて提案手法はメモリ転送量，
+転送ページ数ともに Pre-copy 手法と比較して大幅に削減できていることが確認された．
+また，メモリ転送量と転送ページ数の削減率が概ね一致していることから，
+提案手法による解放したキャッシュのページ転送スキップが，
+転送の削減に寄与しているといえる．
+そして，メモリサイズが大きくなるにつれて転送削減効果が増し，
+メモリサイズが 60GB の条件下では最大約 67\% の削減を達成した．
+このことから，MongoDB のキャッシュに割り当てられるメモリサイズが大きくなるほど，
+提案手法の効果が発揮されると考えられる．
+
+\begin{figure}[H]
+  \centering
+  \includegraphics[width=0.8\linewidth]{figure/exp_transffer_data.png}
+  \caption{メモリ転送量}
+  \label{fig:exp_transffer_data}
+\end{figure}
+
+\begin{figure}[H]
+  \centering
+  \includegraphics[width=0.8\linewidth]{figure/exp_transffer_page.png}
+  \caption{転送ページ数}
+  \label{fig:exp_transffer_page}
+\end{figure}
+
+
+\subsection{CPU 時間}
+実験におけるCPU 時間の結果を図\ref{fig:exp_cpu_time}に示す．
+実験結果によると，全てのメモリサイズにおいて提案手法は Pre-copy 手法と比較して，
+CPU 時間を一貫して削減できていることが確認された．
+具体的には，どのメモリサイズにおいても 概ね 15\% 前後の削減率を示しており，
+メモリサイズが 16GB の条件においては，最大約 21\% の削減を達成した．
+提案手法では，MongoDB 側でのキャッシュ解放と，QEMU 側での転送スキップビットマップ構築
+という追加の CPU 処理が発生する．
+しかし，これらのオーバヘッドを加味してもページ転送処理の削減効果が上回るため，
+結果的にトータルの CPU 時間が削減されていると考えられる．
+このことから，メモリサイズに関わらず安定して従来手法より CPU 負荷が低く抑えられており，
+メモリサイズが増加しても提案手法の CPU に対する効率性が損なわれないと考えられる．
+
+\begin{figure}[H]
+  \centering
+  \includegraphics[width=0.8\linewidth]{figure/exp_cpu_time.png}
+  \caption{CPU 時間}
+  \label{fig:exp_cpu_time}
+\end{figure}
+
+
 \subsection{ダウンタイム}
+実験におけるダウンタイムの結果を図\ref{fig:exp_downtime}に示す．
+実験結果によると，全てのメモリサイズにおいて提案手法は Pre-copy 手法と比較して，
+ダウンタイムを一貫して削減できていることが確認された．
+特に，メモリサイズが 48GB の条件においては，最大約 42\% の削減を達成した．
+これは，解放されたキャッシュの転送スキップにより，
+Stop-and-Copy フェーズで転送すべきページ数が抑制されたためだと考えられる．
+このことから，提案手法はどのメモリサイズにおいてもダウンタイムを抑制し，
+サービス停止による影響を最小限に抑えることができると考えられる．
+
+\begin{figure}[H]
+  \centering
+  \includegraphics[width=0.8\linewidth]{figure/exp_downtime.png}
+  \caption{ダウンタイム}
+  \label{fig:exp_downtime}
+\end{figure}
 
