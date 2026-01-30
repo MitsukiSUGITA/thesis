@@ -51,9 +51,14 @@
 @article{barhamXenArtVirtualization,
   title = {Xen and the {{Art}} of {{Virtualization}}},
   author = {Barham, Paul and Dragovic, Boris and Fraser, Keir and Hand, Steven and Harris, Tim and Ho, Alex and Neugebauer, Rolf and Pratt, Ian and Warfield, Andrew},
+  date = {2003-10-19},
+  journaltitle = {ACM SIGOPS Operating Systems Review},
+  volume = {37},
+  number = {5},
+  pages = {164--177},
   abstract = {Numerous systems have been designed which use virtualization to subdivide the ample resources of a modern computer. Some require specialized hardware, or cannot support commodity operating systems. Some target 100\% binary compatibility at the expense of performance. Others sacrifice security or functionality for speed. Few offer resource isolation or performance guarantees; most provide only best-effort provisioning, risking denial of service.},
   langid = {english},
-  file = {C:\Users\Mitsuki25\OneDrive - Tokyo University of Agriculture and Technology\lab\論文\Barham et al. - Xen and the Art of Virtualization.pdf}
+  file = {C:\Users\Mitsuki25\OneDrive - Tokyo University of Agriculture and Technology\lab\Presentation\Graduation Thesis\References\Barham et al. - Xen and the Art of Virtualization.pdf}
 }
 
 @article{bellardQEMUFastPortable2005b,
@@ -141,9 +146,12 @@
 @article{clarkLiveMigrationVirtuala,
   title = {Live {{Migration}} of {{Virtual Machines}}},
   author = {Clark, Christopher and Fraser, Keir and Hand, Steven and Hansen, Jacob Gorm and Jul, Eric and Limpach, Christian and Pratt, Ian and Warfield, Andrew},
+  date = {2005},
+  pages = {273--286},
+  publisher = {USENIX Association},
   abstract = {Migrating operating system instances across distinct physical hosts is a useful tool for administrators of data centers and clusters: It allows a clean separation between hardware and software, and facilitates fault management, load balancing, and low-level system maintenance.},
   langid = {english},
-  file = {C:\Users\Mitsuki25\OneDrive - Tokyo University of Agriculture and Technology\lab\論文\Clark et al. - Live Migration of Virtual Machines 1.pdf}
+  file = {C:\Users\Mitsuki25\OneDrive - Tokyo University of Agriculture and Technology\lab\Presentation\Graduation Thesis\References\Clark et al. - Live Migration of Virtual Machines 1.pdf}
 }
 
 @online{CloudComputingServices,
@@ -164,19 +172,14 @@
   file = {C:\Users\Mitsuki25\Zotero\storage\PZJGDNZB\aws.amazon.com.html}
 }
 
-@online{CloudComputingServicesb,
-  title = {Cloud {{Computing Services}} | {{Microsoft Azure}}},
-  url = {https://azure.microsoft.com/en-us},
-  urldate = {2026-01-08},
-  file = {C:\Users\Mitsuki25\Zotero\storage\35VT4Y6L\en-us.html}
-}
-
 @article{dasLiteGreenSavingEnergy,
   title = {{{LiteGreen}}: {{Saving Energy}} in {{Networked Desktops Using Virtualization}}},
   author = {Das, Tathagata and Padala, Pradeep and Padmanabhan, Venkata N},
+  date = {2010-06-23},
+  journaltitle = {USENIXATC'10: Proceedings of the 2010 USENIX conference on USENIX annual technical conference},
   abstract = {To reduce energy wastage by idle desktop computers in enterprise environments, the typical approach is to put a computer to sleep during long idle periods (e.g., overnight), with a proxy employed to reduce user disruption by maintaining the computer’s network presence at some minimal level. However, the Achilles’ heel of the proxy-based approach is the inherent trade-off between the functionality of maintaining network presence and the complexity of application-specific customization.},
   langid = {english},
-  file = {C:\Users\Mitsuki25\OneDrive - Tokyo University of Agriculture and Technology\lab\論文\Das et al. - LiteGreen Saving Energy in Networked Desktops Using Virtualization.pdf}
+  file = {C:\Users\Mitsuki25\OneDrive - Tokyo University of Agriculture and Technology\lab\Presentation\Graduation Thesis\References\Das et al. - LiteGreen Saving Energy in Networked Desktops Using Virtualization.pdf}
 }
 
 @inproceedings{hackingImprovingLiveMigration2009,
@@ -249,17 +252,6 @@
   file = {C:\Users\Mitsuki25\OneDrive - Tokyo University of Agriculture and Technology\lab\論文\Hines et al. - 2009 - Post-copy live migration of virtual machines.pdf}
 }
 
-@online{HomepageNdashGoogle,
-  title = {Homepage \&ndash; {{Google Data Centers}}},
-  url = {https://datacenters.google/},
-  urldate = {2026-01-08},
-  abstract = {Discover how Google\&rsquo;s data centers help build better for everyone around the world.},
-  langid = {american},
-  organization = {Google Data Centers},
-  keywords = {Google Data Centers},
-  file = {C:\Users\Mitsuki25\Zotero\storage\PLMBZALK\datacenters.google.html}
-}
-
 @inproceedings{houApplicationassistedLiveMigration2015,
   title = {Application-Assisted Live Migration of Virtual Machines with {{Java}} Applications},
   booktitle = {Proceedings of the {{Tenth European Conference}} on {{Computer Systems}}},
@@ -276,6 +268,24 @@
   isbn = {978-1-4503-3238-5},
   langid = {english},
   file = {C:\Users\Mitsuki25\OneDrive - Tokyo University of Agriculture and Technology\lab\論文\Hou et al. - 2015 - Application-assisted live migration of virtual machines with Java applications.pdf}
+}
+
+@inproceedings{ibrahimOptimizedPrecopyLive2011a,
+  title = {Optimized Pre-Copy Live Migration for Memory Intensive Applications},
+  booktitle = {Proceedings of 2011 {{International Conference}} for {{High Performance Computing}}, {{Networking}}, {{Storage}} and {{Analysis}}},
+  author = {Ibrahim, Khaled Z. and Hofmeyr, Steven and Iancu, Costin and Roman, Eric},
+  date = {2011-11-12},
+  pages = {1--11},
+  publisher = {ACM},
+  location = {Seattle Washington},
+  doi = {10.1145/2063384.2063437},
+  url = {https://dl.acm.org/doi/10.1145/2063384.2063437},
+  urldate = {2026-01-27},
+  abstract = {Live migration is a widely used technique for resource consolidation and fault tolerance. KVM and Xen use iterative pre-copy approaches which work well in practice for commercial applications. In this paper, we study pre-copy live migration of MPI and OpenMP scientific applications running on KVM and present a detailed performance analysis of the migration process. We show that due to a high rate of memory changes, the current KVM rate control and target downtime heuristics do not cope well with HPC applications: statically choosing rate limits and downtimes is infeasible and current mechanisms sometimes provide suboptimal performance. We present a novel on-line algorithm able to provide minimal downtime and minimal impact on end-to-end application performance. At the core of this algorithm is controlling migration based on the application memory rate of change.},
+  eventtitle = {{{SC}} '11: {{International Conference}} for {{High Performance Computing}}, {{Networking}}, {{Storage}} and {{Analysis}}},
+  isbn = {978-1-4503-0771-0},
+  langid = {english},
+  file = {C:\Users\Mitsuki25\OneDrive - Tokyo University of Agriculture and Technology\lab\論文\Ibrahim et al. - 2011 - Optimized pre-copy live migration for memory intensive applications.pdf}
 }
 
 @article{jinOptimizingLiveMigration2011,
@@ -370,6 +380,17 @@
   file = {C:\Users\Mitsuki25\OneDrive - Tokyo University of Agriculture and Technology\lab\論文\Popek と Goldberg - Formal requirements for virtualizable third generation architectures.pdf}
 }
 
+@article{pountainRunlengthEncoding1987,
+  title = {Run-Length Encoding},
+  author = {Pountain, Dick},
+  date = {1987-06},
+  journaltitle = {BYTE},
+  volume = {12},
+  number = {6},
+  pages = {317--319},
+  file = {C:\Users\Mitsuki25\OneDrive - Tokyo University of Agriculture and Technology\lab\論文\198706_Byte_Magazine_Vol_12-06_CAD_Mice_12-MHz_ATs_IBM_PS2_Family 2.pdf}
+}
+
 @online{QEMU,
   title = {{{QEMU}}},
   url = {https://www.qemu.org/},
@@ -395,6 +416,24 @@
   file = {C:\Users\Mitsuki25\OneDrive - Tokyo University of Agriculture and Technology\lab\論文\Rosenblum と Garfinkel - 2005 - Virtual machine monitors current technology and future trends.pdf}
 }
 
+@inproceedings{ruprechtVMLiveMigration2018a,
+  title = {{{VM Live Migration At Scale}}},
+  booktitle = {Proceedings of the 14th {{ACM SIGPLAN}}/{{SIGOPS International Conference}} on {{Virtual Execution Environments}}},
+  author = {Ruprecht, Adam and Jones, Danny and Shiraev, Dmitry and Harmon, Greg and Spivak, Maya and Krebs, Michael and Baker-Harvey, Miche and Sanderson, Tyler},
+  date = {2018-03-25},
+  pages = {45--56},
+  publisher = {ACM},
+  location = {Williamsburg VA USA},
+  doi = {10.1145/3186411.3186415},
+  url = {https://dl.acm.org/doi/10.1145/3186411.3186415},
+  urldate = {2026-01-27},
+  abstract = {Uninterrupted uptime is a critical aspect of Virtual Machines (VMs) offered by cloud hosting providers. Google’s VMs run on top of rapidly changing infrastructure: we regularly update hardware and host software, and we must quickly respond to failing hardware. Frequent change is critical to both development velocity—deploying new versions of services and infrastructure—and the ability to respond rapidly to defects, including critical security fixes. Typically these updates would be disruptive, resulting in VM termination or restart. In this paper we present how we use VM live migration at scale to eliminate this disruption with minimal impact to the guest, performing over 1,000,0001migrations monthly in our production fleet, with 50ms median blackout, 300ms 99th percentile blackout.},
+  eventtitle = {{{VEE}} '18: 14th {{ACM SIGPLAN}}/{{SIGOPS International Conference}} on {{Virtual Execution Environments}}},
+  isbn = {978-1-4503-5579-7},
+  langid = {english},
+  file = {C:\Users\Mitsuki25\OneDrive - Tokyo University of Agriculture and Technology\lab\論文\Ruprecht et al. - 2018 - VM Live Migration At Scale.pdf}
+}
+
 @inproceedings{svardEvaluationDeltaCompression2011,
   title = {Evaluation of Delta Compression Techniques for Efficient Live Migration of Large Virtual Machines},
   booktitle = {Proceedings of the 7th {{ACM SIGPLAN}}/{{SIGOPS}} International Conference on {{Virtual}} Execution Environments},
@@ -413,9 +452,11 @@
   file = {C:\Users\Mitsuki25\OneDrive - Tokyo University of Agriculture and Technology\lab\論文\Svärd et al. - 2011 - Evaluation of delta compression techniques for efficient live migration of large virtual machines.pdf}
 }
 
-@article{ungarGenerationScavenging,
-  title = {Generation {{Scavenging}}},
+@article{ungarGenerationScavengingNondisruptlve,
+  title = {Generation {{Scavenging}}: {{A Non-disruptlve High Perfornm}}.Nce {{Storage Reclamation Algorithm}}},
   author = {Ungar, David},
+  date = {1984-04-25},
+  pages = {157--167},
   abstract = {Many interactive computing environmencs provide automatic storage reclamation and virtual memory to ease the burden of managing storage. Unfortunately, many storage reclams\textasciitilde tion algorithms impede interaction with distracting pauses. Generation Scavenging is a reclamation algorithm that has no noticeable pauses, eliminates page faults for transient objects, compacts objects without resorting to indirection, and reclaims circular structures, in one third the time of traditional approaches.},
   langid = {english},
   file = {C:\Users\Mitsuki25\OneDrive - Tokyo University of Agriculture and Technology\lab\論文\Ungar - Generation Scavenging.pdf}
@@ -429,30 +470,15 @@
   file = {C:\Users\Mitsuki25\OneDrive - Tokyo University of Agriculture and Technology\lab\論文\Vera et al. - Data Modeling for NoSQL Document-Oriented Databases.pdf}
 }
 
-@article{wagnerStringtoStringCorrectionProblem1974,
-  title = {The {{String-to-String Correction Problem}}},
-  author = {Wagner, Robert A. and Fischer, Michael J.},
-  date = {1974-01},
-  journaltitle = {Journal of the ACM},
-  shortjournal = {J. ACM},
-  volume = {21},
-  number = {1},
-  pages = {168--173},
-  issn = {0004-5411, 1557-735X},
-  doi = {10.1145/321796.321811},
-  url = {https://dl.acm.org/doi/10.1145/321796.321811},
-  urldate = {2026-01-24},
-  abstract = {The               string-to-string correction problem               is to determine the distance between two strings as measured by the minimum cost sequence of “edit operations” needed to change the one string into the other. The edit operations investigated allow changing one symbol of a string into another single symbol, deleting one symbol from a string, or inserting a single symbol into a string. An algorithm is presented which solves this problem in time proportional to the product of the lengths of the two strings. Possible applications are to the problems of automatic spelling correction and determining the longest subsequence of characters common to two strings.},
-  langid = {english},
-  file = {C:\Users\Mitsuki25\OneDrive - Tokyo University of Agriculture and Technology\lab\論文\Wagner と Fischer - 1974 - The String-to-String Correction Problem.pdf}
-}
-
 @article{woodBlackboxGrayboxStrategies,
   title = {Black-Box and {{Gray-box Strategies}} for {{Virtual Machine Migration}}},
   author = {Wood, Timothy and Shenoy, Prashant and Venkataramani, Arun and Yousif, Mazin},
+  date = {2007},
+  pages = {229--242},
+  publisher = {USENIX Association 229},
   abstract = {Virtualization can provide significant benefits in data centers by enabling virtual machine migration to eliminate hotspots. We present Sandpiper, a system that automates the task of monitoring and detecting hotspots, determining a new mapping of physical to virtual resources and initiating the necessary migrations. Sandpiper implements a black-box approach that is fully OS- and application-agnostic and a gray-box approach that exploits OS- and application-level statistics. We implement our techniques in Xen and conduct a detailed evaluation using a mix of CPU, network and memory-intensive applications. Our results show that Sandpiper is able to resolve single server hotspots within 20 seconds and scales well to larger, data center environments. We also show that the gray-box approach can help Sandpiper make more informed decisions, particularly in response to memory pressure.},
   langid = {english},
-  file = {C:\Users\Mitsuki25\OneDrive - Tokyo University of Agriculture and Technology\lab\論文\Wood et al. - Black-box and Gray-box Strategies for Virtual Machine Migration.pdf}
+  file = {C:\Users\Mitsuki25\OneDrive - Tokyo University of Agriculture and Technology\lab\Presentation\Graduation Thesis\References\Wood et al. - Black-box and Gray-box Strategies for Virtual Machine Migration.pdf}
 }
 
 @article{zhangSurveyVirtualMachine2018,

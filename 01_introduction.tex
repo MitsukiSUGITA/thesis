@@ -5,15 +5,15 @@
 技術である．仮想マシンモニタ (VMM) というソフトウェアによって VM の作成，管理が行われる．
 VM は単一の物理マシン上で複数構築することが可能であるため主にコンソリデーションに用いられ，
 複数のサーバを統合することでサーバの管理コストを削減することができる．
-実際に，Google Cloud Platform \cite{CloudComputingServices}や Amazon Web Services \cite{CloudComputingServicesa}，
-Microsoft Azure \cite{CloudComputingServicesb}など Real-world なクラウド環境で使用されている．
+実際に，Google Cloud Platform \cite{CloudComputingServices}や Amazon Web Services \cite{CloudComputingServicesa}など，
+Real-world なクラウド環境で使用されている．
 
 仮想マシンライブ移送は，VM を稼働しながらその実行の影響を最小限に抑えつつ
 別ホストに移送する技術である．
 サーバー統合，ゼロダウンタイムでのハードウェアメンテナンス，エネルギー管理，トラフィック管理など，
 クラウド管理業務の大部分は VM ライブ移送によって支えられている\cite{zhangSurveyVirtualMachine2018}．
-例えば，Google のデータセンタ\cite{HomepageNdashGoogle}においても，
-大規模なクラスタ管理やメンテナンスのためにライブ移送技術が日常的に利用されている．
+例えば，Google のデータセンタにおいても，
+大規模なクラスタ管理やメンテナンスのためにライブ移送技術が日常的に利用されている\cite{ruprechtVMLiveMigration2018a}．
 移送手法には，先に移送先ホストにメモリを転送してから VM の実行権を移す Pre-copy 手法\cite{clarkLiveMigrationVirtuala}と，
 先に VM の実行権を移送先ホストに移してからメモリを転送する Post-copy 手法\cite{hinesPostcopyLiveMigration2009}がある．
 Pre-copy 手法は耐障害性が優れているが，反復的なメモリ転送によって総移送時間が長期化する傾向がある．

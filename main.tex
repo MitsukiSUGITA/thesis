@@ -80,7 +80,8 @@
 \usepackage{microtype}
 
 % 参考文献に BibLaTeX を使う
-\usepackage[backend=bibtex, style=numeric, sorting=none]{biblatex}
+%\usepackage[backend=bibtex, style=numeric, sorting=none]{biblatex}
+\usepackage[backend=bibtex, style=numeric, sorting=none, maxbibnames=99]{biblatex}
 \addbibresource{citation/reference.bib}
 
 % PDF にハイパーリンク作成
@@ -91,7 +92,7 @@
 \fi
 % PDF のメタデータ設定
 \hypersetup{%
-            pdfauthor={杉田　光希},
+            pdfauthor={杉田 光希},
             pdftitle={ドキュメント DB と連動する仮想マシンライブ移送},
             pdfsubject={2025年度 卒業論文},
             %pdfkeywords={クラウド; ライブラリ OS; 仮想化; 計測; Cloud; Library OS; virtualization; measurement; Unikernel},

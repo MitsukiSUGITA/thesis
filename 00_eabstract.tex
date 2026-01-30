@@ -1,10 +1,12 @@
 %abstract in English
 Live migration of virtual machines (VMs) is a technique that moves active VMs between different physical hosts without losing any running states. 
+Live migration is helpful to intra-datacenter administration including load balancing, power saving, and effective software upgrades.
 Although it is desirable for administrators that the live migration is completed as quickly as possible, the pre-copy-based live migration, 
 widely used in modern hypervisors, does not satisfy this demand on the current trend that VMs on which running applications are performance-critical 
 such as document databases (DDBs) have quite large memory. 
 This thesis presents an approach shortens the time for live-migrating VMs with even large memory DDBs. 
 To quickly produce the running state of the migrating VMs on the destination, our approach performs regular memory transfers 
 while simultaneously constructing the DDB's buffer-pool by fetching the data items from the shared storage. 
+By conducting both transfers, the approach efficiently produces the running state of the target VM on the destination hosts.
 We implemented a prototype on MongoDB 8.2.2, QEMU 10.2.0, and Linux 6.8.0. 
-The experimental results show that the migration time of the prototype is up to 1.71{\texttimes} compared to the conventional pre-copy.
+The experimental results show that the migration time of the prototype is up to 2.25{\texttimes} compared to the conventional pre-copy.

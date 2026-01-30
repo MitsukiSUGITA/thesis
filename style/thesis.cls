@@ -185,8 +185,8 @@
     %学籍番号 \@studentnumber\hspace{2\zh}氏名 \@jauthor（\@eauthor）
     学籍番号 \@studentnumber\hspace{2\zh}氏名 \@jauthor（\@eauthor）\hspace{2\zh}山田浩史研究室
 
-    %提出日　\@deadline
-    発表日　\@deadline
+    提出日　\@deadline
+    %発表日　\@deadline
     \end{center}
     \vspace{\baselineskip}
     \bgroup
